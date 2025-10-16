@@ -1,0 +1,17 @@
+{
+    "LoginPage": {
+        "Name": "FamilyHealth",
+        "Welcome": "Chào mừng đến với",
+        "Login": "Đăng nhập",
+        "Email": "Email",
+        "EnterYourEmail": "Nhập email của bạn",
+        "PleaseEnterYourEmail": "Vui lòng nhập email của bạn",
+        "PleaseEnterAValidEmail": "Vui lòng nhập một địa chỉ email hợp lệ",
+        "Password": "Mật khẩu",
+        "EnterYourPassword": "Nhập mật khẩu của bạn",
+        "PleaseEnterYourPassword": "Vui lòng nhập mật khẩu của bạn",
+        "PasswordMustBeAtLeast6Characters": "Mật khẩu phải có ít nhất 6 ký tự",
+        "ForgotPassword": "Quên mật khẩu?",
+        "Register": "Đăng ký"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "LoginPage": {
+    "Name": "FamilyHealth",
+    "Welcome": "Welcome to",
+    "Login": "Login",
+    "Email": "Email",
+    "EnterYourEmail": "Enter your email",
+    "PleaseEnterYourEmail": "Please enter your email",
+    "PleaseEnterAValidEmail": "Please enter a valid email",
+    "Password": "Password",
+    "EnterYourPassword": "Enter your password",
+    "PleaseEnterYourPassword": "Please enter your password",
+    "ForgotPassword": "Forgot password?",
+    "Register": "Register"
+  }
+}
