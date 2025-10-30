@@ -1,9 +1,10 @@
 import {useState} from 'react';
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 // import { useTranslation } from "react-i18next";
 export default function Login() {
-    // const {t} = useTranslation();
+    const {t} = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Gia đình');
@@ -11,12 +12,11 @@ export default function Login() {
     
     const handleLogin = () => {
         console.log('Login:', { email, password, role });
-        alert(`Đăng nhập với vai trò: ${role}`);
+//         alert(`Đăng nhập với vai trò: ${role}`);
         navigate("Dashboard");
     };
-
     const handleDemoLogin = (demoRole) => {
-        alert(`Đăng nhập nhanh với vai trò: ${demoRole}`);
+//         alert(`Đăng nhập nhanh với vai trò: ${demoRole}`);
         navigate("/dashboard");
     };
 
@@ -26,10 +26,10 @@ export default function Login() {
             {/* Header */}
             <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {/* {t("Login.Welcom")} */}
+                {t("LoginPage.Welcome")}  {t("LoginPage.Name")}
             </h1>
             <p className="text-gray-500">
-                Đăng nhập để truy cập hệ thống quản lý sức khỏe
+                {t("LoginPage.LoginToProject")} {t("LoginPage.Name")}
             </p>
             </div>
 
@@ -38,11 +38,11 @@ export default function Login() {
             {/* Email Input */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {/* {t("Login.Email")} */}
+                    {t("LoginPage.Email")}
                 </label>
                 <input
                 type="email"
-                placeholder="Nhập email của bạn"
+                placeholder= {t("LoginPage.EnterYourEmail")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
@@ -56,13 +56,12 @@ export default function Login() {
                 </label>
                 <input
                 type="password"
-                placeholder="Nhập mật khẩu"
+                placeholder={t("LoginPage.EnterYourPassword")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
             </div>
-
             {/* Role Select */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -84,7 +83,7 @@ export default function Login() {
                 onClick={handleLogin}
                 className="w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md"
             >
-                Đăng nhập
+                {t("LoginPage.Login")}
             </button>
             </div>
 

@@ -1,8 +1,9 @@
 {
     "LoginPage": {
-        "Name": "FamilyHealth",
+        "Name": "Hệ Thống Quản Lý Sức Khỏe",
         "Welcome": "Chào mừng đến với",
         "Login": "Đăng nhập",
+        "LoginToProject": "Đăng nhập để truy cập",
         "Email": "Email",
         "EnterYourEmail": "Nhập email của bạn",
         "PleaseEnterYourEmail": "Vui lòng nhập email của bạn",

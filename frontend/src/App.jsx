@@ -3,8 +3,9 @@ import './index.css'
 import Login from './page/Login.jsx'
 import Dashboard from "./page/Dashboard";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 function App() {
-  const [count, setCount] = useState(0)
+    const { t, i18n } = useTranslation();
 
   return (
     <BrowserRouter>

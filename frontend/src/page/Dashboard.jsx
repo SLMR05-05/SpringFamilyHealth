@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users, Heart, Calendar, Bell, Plus, User, Phone, AlertCircle, FileText } from 'lucide-react';
-
+import { FaBeer } from 'react-icons/fa'; // Example from Font Awesome
+import { MdSettings } from 'react-icons/md'; // Example from Material Design
 // Mock data
 const familyMembers = [
   {
@@ -171,7 +172,8 @@ export default function FamilyDashboard() {
                 </span></span>
               </button>
               <button className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-indigo-200 focus:border-indigo-400 ">
-                Đăng xuất
+                  <FaBeer size={24} color="goldenrod" />
+                  <MdSettings className="settings-icon" />
               </button>
             </div>
           </div>
@@ -216,7 +218,7 @@ export default function FamilyDashboard() {
       {/* Navigation Tabs */}
       <div className=" max-w-7xl mx-auto rounded-3xl px-4">
         <div className="bg-grey-700 border rounded-3xl border-gray-200 max-w-7xl ">
-          <nav className="grid grid-cols-2 md:grid-cols-4 border-b border-gray-200 text-sm ">
+          <nav className="grid grid-cols-2 md:grid-cols-4 text-sm ">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -226,7 +228,7 @@ export default function FamilyDashboard() {
                   className={`flex items-center gap-2 py-2 px-4 border-2 transition-colors rounded-3xl m-1 ${
                     activeTab === tab.id
                       ? ' bg-white'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-300'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
