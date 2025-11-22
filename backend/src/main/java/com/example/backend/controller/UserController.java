@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserCreateRequest req) {
         User toSave = new User();
         toSave.setRole(req.getRole());

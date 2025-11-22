@@ -5,6 +5,7 @@ import com.example.backend.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import java.util.List;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -42,6 +45,10 @@ public class UserService {
         if (user.getEmail() != null && userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new DuplicateResourceException("Email already exists: " + user.getEmail());
         }
+        // Hash password before saving
+        if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        }
         try {
             return userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
@@ -63,7 +70,12 @@ public class UserService {
         }
 
         existing.setRole(payload.getRole());
-        existing.setPasswordHash(payload.getPasswordHash());
+        
+        // Hash password if it's being updated
+        if (payload.getPasswordHash() != null && !payload.getPasswordHash().isEmpty()) {
+            existing.setPasswordHash(passwordEncoder.encode(payload.getPasswordHash()));
+        }
+        
         existing.setName(payload.getName());
         existing.setPhone(payload.getPhone());
         existing.setEmail(payload.getEmail());

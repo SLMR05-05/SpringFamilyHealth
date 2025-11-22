@@ -11,7 +11,7 @@ public class UserUpdateRequest {
 
     @NotBlank
     @Size(max = 255)
-    private String passwordHash;
+    private String password;
 
     @NotBlank
     @Size(max = 255)
@@ -27,8 +27,8 @@ public class UserUpdateRequest {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getPasswordHash() { return password; }
+    public void setPasswordHash(String passwordHash) { this.password = passwordHash; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getPhone() { return phone; }
