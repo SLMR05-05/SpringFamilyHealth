@@ -2,6 +2,8 @@ package com.example.backend.service;
 
 import com.example.backend.entity.Member;
 import com.example.backend.repository.MemberRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,9 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public List<Member> findAll() { return repo.findAll(); }
+
+    @Transactional(readOnly = true)
+    public Page<Member> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Transactional(readOnly = true)
     public Member findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("Member not found: " + id)); }

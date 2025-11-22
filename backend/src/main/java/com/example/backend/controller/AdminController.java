@@ -1,40 +1,77 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.admin.AdminCreateRequest;
+import com.example.backend.dto.admin.AdminUpdateRequest;
+import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.dto.response.AdminResponse;
 import com.example.backend.entity.Admin;
 import com.example.backend.service.AdminService;
-import com.example.backend.service.NotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.backend.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admins")
 @CrossOrigin
 public class AdminController {
     private final AdminService service;
-    public AdminController(AdminService service) { this.service = service; }
+    private final UserService userService;
+
+    public AdminController(AdminService service, UserService userService) {
+        this.service = service;
+        this.userService = userService;
+    }
 
     @GetMapping
-    public List<Admin> getAll() { return service.findAll(); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<Page<AdminResponse>> getAll(Pageable pageable) {
+        return ApiResponse.<Page<AdminResponse>>builder()
+                .result(service.findAll(pageable).map(this::toResponse))
+                .build();
+    }
 
     @GetMapping("/{id}")
-    public Admin getById(@PathVariable Integer id) { return service.findById(id); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<AdminResponse> getById(@PathVariable Integer id) {
+        return ApiResponse.<AdminResponse>builder()
+                .result(toResponse(service.findById(id)))
+                .build();
+    }
 
     @PostMapping
-    public ResponseEntity<Admin> create(@RequestBody Admin entity) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<AdminResponse> create(@RequestBody @jakarta.validation.Valid AdminCreateRequest request) {
+        Admin entity = new Admin();
+        entity.setUser(userService.findById(request.getUserId()));
         Admin created = service.create(entity);
-        return ResponseEntity.created(URI.create("/api/admins/" + created.getAdminId())).body(created);
+        return ApiResponse.<AdminResponse>builder()
+                .result(toResponse(created))
+                .build();
     }
 
     @PutMapping("/{id}")
-    public Admin update(@PathVariable Integer id, @RequestBody Admin entity) { return service.update(id, entity); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<AdminResponse> update(@PathVariable Integer id, @RequestBody @jakarta.validation.Valid AdminUpdateRequest request) {
+        Admin payload = new Admin();
+        payload.setUser(userService.findById(request.getUserId()));
+        return ApiResponse.<AdminResponse>builder()
+                .result(toResponse(service.update(id, payload)))
+                .build();
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) { service.delete(id); return ResponseEntity.noContent().build(); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ApiResponse.<Void>builder().build();
+    }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<String> handleNotFound(NotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage()); }
+    private AdminResponse toResponse(Admin a) {
+        AdminResponse res = new AdminResponse();
+        res.setAdminId(a.getAdminId());
+        res.setUserId(a.getUser() != null ? a.getUser().getUserId() : null);
+        return res;
+    }
 }

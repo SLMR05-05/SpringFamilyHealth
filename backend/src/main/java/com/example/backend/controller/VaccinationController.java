@@ -1,40 +1,83 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.dto.response.VaccinationResponse;
+import com.example.backend.dto.vaccination.VaccinationCreateRequest;
+import com.example.backend.dto.vaccination.VaccinationUpdateRequest;
 import com.example.backend.entity.Vaccination;
+import com.example.backend.service.MemberService;
 import com.example.backend.service.VaccinationService;
-import com.example.backend.service.NotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/vaccinations")
 @CrossOrigin
 public class VaccinationController {
     private final VaccinationService service;
-    public VaccinationController(VaccinationService service) { this.service = service; }
+    private final MemberService memberService;
+    public VaccinationController(VaccinationService service, MemberService memberService) {
+        this.service = service;
+        this.memberService = memberService;
+    }
 
     @GetMapping
-    public List<Vaccination> getAll() { return service.findAll(); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<Page<VaccinationResponse>> getAll(Pageable pageable) {
+        return ApiResponse.<Page<VaccinationResponse>>builder()
+                .result(service.findAll(pageable).map(this::toResponse))
+                .build();
+    }
 
     @GetMapping("/{id}")
-    public Vaccination getById(@PathVariable Integer id) { return service.findById(id); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<VaccinationResponse> getById(@PathVariable Integer id) {
+        return ApiResponse.<VaccinationResponse>builder()
+                .result(toResponse(service.findById(id)))
+                .build();
+    }
 
     @PostMapping
-    public ResponseEntity<Vaccination> create(@RequestBody Vaccination entity) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<VaccinationResponse> create(@Valid @RequestBody VaccinationCreateRequest req) {
+        Vaccination entity = new Vaccination();
+        entity.setMember(memberService.findById(req.getMemberId()));
+        entity.setVaccineName(req.getVaccineName());
+        entity.setDateGiven(req.getDateGiven());
         Vaccination created = service.create(entity);
-        return ResponseEntity.created(URI.create("/api/vaccinations/" + created.getVaccineId())).body(created);
+        return ApiResponse.<VaccinationResponse>builder()
+                .result(toResponse(created))
+                .build();
     }
 
     @PutMapping("/{id}")
-    public Vaccination update(@PathVariable Integer id, @RequestBody Vaccination entity) { return service.update(id, entity); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<VaccinationResponse> update(@PathVariable Integer id, @Valid @RequestBody VaccinationUpdateRequest req) {
+        Vaccination payload = new Vaccination();
+        payload.setMember(memberService.findById(req.getMemberId()));
+        payload.setVaccineName(req.getVaccineName());
+        payload.setDateGiven(req.getDateGiven());
+        return ApiResponse.<VaccinationResponse>builder()
+                .result(toResponse(service.update(id, payload)))
+                .build();
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) { service.delete(id); return ResponseEntity.noContent().build(); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ApiResponse.<Void>builder().build();
+    }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<String> handleNotFound(NotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage()); }
+    private VaccinationResponse toResponse(Vaccination v) {
+        VaccinationResponse res = new VaccinationResponse();
+        res.setVaccineId(v.getVaccineId());
+        res.setMemberId(v.getMember() != null ? v.getMember().getMemberId() : null);
+        res.setVaccineName(v.getVaccineName());
+        res.setDateGiven(v.getDateGiven());
+        return res;
+    }
 }

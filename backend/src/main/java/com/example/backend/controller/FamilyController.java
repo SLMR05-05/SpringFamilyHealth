@@ -1,40 +1,83 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.family.FamilyCreateRequest;
+import com.example.backend.dto.family.FamilyUpdateRequest;
+import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.dto.response.FamilyResponse;
 import com.example.backend.entity.Family;
+import com.example.backend.service.DoctorService;
 import com.example.backend.service.FamilyService;
-import com.example.backend.service.NotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/families")
 @CrossOrigin
 public class FamilyController {
     private final FamilyService service;
-    public FamilyController(FamilyService service) { this.service = service; }
+    private final DoctorService doctorService;
+    public FamilyController(FamilyService service, DoctorService doctorService) {
+        this.service = service;
+        this.doctorService = doctorService;
+    }
 
     @GetMapping
-    public List<Family> getAll() { return service.findAll(); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<Page<FamilyResponse>> getAll(Pageable pageable) {
+        return ApiResponse.<Page<FamilyResponse>>builder()
+                .result(service.findAll(pageable).map(this::toResponse))
+                .build();
+    }
 
     @GetMapping("/{id}")
-    public Family getById(@PathVariable Integer id) { return service.findById(id); }
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<FamilyResponse> getById(@PathVariable Integer id) {
+        return ApiResponse.<FamilyResponse>builder()
+                .result(toResponse(service.findById(id)))
+                .build();
+    }
 
     @PostMapping
-    public ResponseEntity<Family> create(@RequestBody Family entity) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<FamilyResponse> create(@Valid @RequestBody FamilyCreateRequest req) {
+        Family entity = new Family();
+        entity.setDoctor(doctorService.findById(req.getDoctorId()));
+        entity.setAddress(req.getAddress());
+        entity.setContactNumber(req.getContactNumber());
         Family created = service.create(entity);
-        return ResponseEntity.created(URI.create("/api/families/" + created.getFamilyId())).body(created);
+        return ApiResponse.<FamilyResponse>builder()
+                .result(toResponse(created))
+                .build();
     }
 
     @PutMapping("/{id}")
-    public Family update(@PathVariable Integer id, @RequestBody Family entity) { return service.update(id, entity); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<FamilyResponse> update(@PathVariable Integer id, @Valid @RequestBody FamilyUpdateRequest req) {
+        Family payload = new Family();
+        payload.setDoctor(doctorService.findById(req.getDoctorId()));
+        payload.setAddress(req.getAddress());
+        payload.setContactNumber(req.getContactNumber());
+        return ApiResponse.<FamilyResponse>builder()
+                .result(toResponse(service.update(id, payload)))
+                .build();
+    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) { service.delete(id); return ResponseEntity.noContent().build(); }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ApiResponse.<Void>builder().build();
+    }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<String> handleNotFound(NotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage()); }
+    private FamilyResponse toResponse(Family f) {
+        FamilyResponse res = new FamilyResponse();
+        res.setFamilyId(f.getFamilyId());
+        res.setDoctorId(f.getDoctor() != null ? f.getDoctor().getDoctorId() : null);
+        res.setAddress(f.getAddress());
+        res.setContactNumber(f.getContactNumber());
+        return res;
+    }
 }

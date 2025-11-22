@@ -21,19 +21,39 @@ public class Doctor {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
+    public Doctor() {
+    }
 
-    public Doctor() {}
+    public Integer getDoctorId() {
+        return doctorId;
+    }
 
-    public Integer getDoctorId() { return doctorId; }
-    public void setDoctorId(Integer doctorId) { this.doctorId = doctorId; }
+    public void setDoctorId(Integer doctorId) {
+        this.doctorId = doctorId;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public User getUser() {
+        return user;
+    }
 
-    public String getCertificateNumber() { return certificateNumber; }
-    public void setCertificateNumber(String certificateNumber) { this.certificateNumber = certificateNumber; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getCertificateNumber() {
+        return certificateNumber;
+    }
+
+    public void setCertificateNumber(String certificateNumber) {
+        this.certificateNumber = certificateNumber;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
 }

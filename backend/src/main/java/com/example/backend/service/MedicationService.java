@@ -2,6 +2,8 @@ package com.example.backend.service;
 
 import com.example.backend.entity.Medication;
 import com.example.backend.repository.MedicationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,9 @@ public class MedicationService {
 
     @Transactional(readOnly = true)
     public List<Medication> findAll() { return repo.findAll(); }
+
+    @Transactional(readOnly = true)
+    public Page<Medication> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Transactional(readOnly = true)
     public Medication findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("Medication not found: " + id)); }

@@ -1,8 +1,12 @@
 package com.example.backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "health_record")
 public class HealthRecord {
     @Id
@@ -25,14 +29,4 @@ public class HealthRecord {
 
     public HealthRecord() {}
 
-    public Integer getRecordId() { return recordId; }
-    public void setRecordId(Integer recordId) { this.recordId = recordId; }
-    public Member getMember() { return member; }
-    public void setMember(Member member) { this.member = member; }
-    public String getBloodType() { return bloodType; }
-    public void setBloodType(String bloodType) { this.bloodType = bloodType; }
-    public String getAllergies() { return allergies; }
-    public void setAllergies(String allergies) { this.allergies = allergies; }
-    public String getChronicConditions() { return chronicConditions; }
-    public void setChronicConditions(String chronicConditions) { this.chronicConditions = chronicConditions; }
 }

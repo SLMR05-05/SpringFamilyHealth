@@ -2,6 +2,8 @@ package com.example.backend.service;
 
 import com.example.backend.entity.Admin;
 import com.example.backend.repository.AdminRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,9 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<Admin> findAll() { return repo.findAll(); }
+
+    @Transactional(readOnly = true)
+    public Page<Admin> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Transactional(readOnly = true)
     public Admin findById(Integer id) {
