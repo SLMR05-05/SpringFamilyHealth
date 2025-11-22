@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home,
   Users,
@@ -13,10 +14,7 @@ import {
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
-const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+
 export default function Sidebar({ activeTab, onTabChange }) {
   const menuItems = [
     { id: "dashboard", label: "Trang chủ", icon: Home },
@@ -26,6 +24,12 @@ export default function Sidebar({ activeTab, onTabChange }) {
     { id: "reports", label: "Báo cáo", icon: BarChart3 },
     { id: "settings", label: "Cài đặt", icon: Settings },
   ];
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col shadow-sm">
@@ -71,7 +75,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
         <button
-          onClick= {handleLogout}
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-red-500 transition-all duration-200"
         >
           <LogOut className="w-5 h-5" />
