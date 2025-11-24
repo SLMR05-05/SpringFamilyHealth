@@ -11,7 +11,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   if (!allowedRoles.includes(user.role)) {
     switch(user.role) {
       case 'admin':
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/admin" replace />;
       case 'doctor':
         return <Navigate to="/doctor-dashboard" replace />;
       case 'user':
