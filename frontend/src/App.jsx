@@ -7,9 +7,9 @@ import { AdminRoutes } from './routes/AdminRoutes';
 // muon test thi thay admin thanh doctor
 const App = () => {
   const routes = useRoutes([
-    { path: '/', element: <Navigate to="/admin" replace /> },
-    AdminRoutes,
-    { path: '*', element: <Navigate to="/admin" replace /> }
+    { path: '/', element: <Navigate to="/doctor" replace /> },
+    DoctorRoutes,
+    { path: '*', element: <Navigate to="/doctor" replace /> }
   ]);
   return routes;
 };

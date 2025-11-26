@@ -247,7 +247,7 @@ const UserManagementPage = () => {
             icon={<EyeOutlined />}
             size="small"
             type="text"
-            onClick={() => {}}
+            onClick={() => { handleViewDetails(user); }}
           />
           {/* ⭐️ NÚT XÓA MỚI ⭐️ */}
           <Button
