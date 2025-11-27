@@ -36,7 +36,7 @@
     "Members": {
       "Title": "Thành viên gia đình",
       "Subtitle": "Quản lý thông tin sức khỏe của các thành viên",
-      "Add": "Thêm thành viên",
+      "Add": "Mã mời",
       "Role": "Vai trò",
       "Age": "Tuổi",
       "Gender": "Giới tính",
@@ -94,5 +94,15 @@
     "Save": "Lưu thay đổi",
     "Cancel": "Hủy",
     "SavedMsg": "Đã lưu thay đổi!"
+  },
+  "AddMember": {
+    "Title": "Mã mời thành viên",
+    "ShareInstruction": "Chia sẻ mã này cho người thân để họ nhập vào ứng dụng và tham gia gia đình của bạn.",
+    "CodeLabel": "Mã gia đình của bạn",
+    "Copy": "Sao chép",
+    "Copied": "Đã sao chép!",
+    "Regenerate": "Tạo mã mới",
+    "Note": "Mã này sẽ hết hạn sau 7 ngày.",
+    "Close": "Đóng"
   }
 }

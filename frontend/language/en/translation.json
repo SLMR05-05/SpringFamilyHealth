@@ -36,7 +36,7 @@
     "Members": {
       "Title": "Family Members",
       "Subtitle": "Manage health information for family members",
-      "Add": "Add Member",
+      "Add": "Invite Code",
       "Role": "Role",
       "Age": "Age",
       "Gender": "Gender",
@@ -71,6 +71,21 @@
         "Medium": "Medium",
         "Low": "Low"
       }
+    },
+    "Chat": {
+      "Title": "Messages",
+      "Search": "Search contact...",
+      "TypeMessage": "Type a message...",
+      "SelectContact": "Select a contact to start chatting",
+      "Roles": {
+        "Doctor": "Family Doctor",
+        "Support": "Support Agent",
+        "Family": "Family Member"
+      },
+      "Status": {
+        "Online": "Online",
+        "Offline": "Offline"
+      }
     }
   },
   "Settings": {
@@ -89,10 +104,14 @@
     "Cancel": "Cancel",
     "SavedMsg": "Changes saved!"
   },
-  "Chat": {
-    "Title": "Online Support",
-    "Welcome": "Hello! I am your medical virtual assistant. How can I help your family today?",
-    "Placeholder": "Type a message...",
-    "Response": "Thank you for your question. The system will connect you with a specialist shortly."
+  "AddMember": {
+    "Title": "Member Invite Code",
+    "ShareInstruction": "Share this code with your family members to let them join your family dashboard.",
+    "CodeLabel": "Your Family Code",
+    "Copy": "Copy",
+    "Copied": "Copied!",
+    "Regenerate": "Regenerate Code",
+    "Note": "This code will expire in 7 days.",
+    "Close": "Close"
   }
 }
