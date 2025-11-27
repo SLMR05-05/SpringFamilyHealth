@@ -21,7 +21,6 @@ const AppRoutes = () => {
       path: "/user-dashboard",
       element: <UserDashboard />
     },
-    { path: '/', element: <Navigate to="/admin" replace /> },
     AdminRoutes,
     DoctorRoutes,
     { path: '*', element: <Navigate to="/doctor" replace /> }

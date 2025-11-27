@@ -1,18 +1,98 @@
 {
-    "LoginPage": {
-        "Name": "Hệ Thống Quản Lý Sức Khỏe",
-        "Welcome": "Chào mừng đến với",
-        "Login": "Đăng nhập",
-        "LoginToProject": "Đăng nhập để truy cập",
-        "Email": "Email",
-        "EnterYourEmail": "Nhập email của bạn",
-        "PleaseEnterYourEmail": "Vui lòng nhập email của bạn",
-        "PleaseEnterAValidEmail": "Vui lòng nhập một địa chỉ email hợp lệ",
-        "Password": "Mật khẩu",
-        "EnterYourPassword": "Nhập mật khẩu của bạn",
-        "PleaseEnterYourPassword": "Vui lòng nhập mật khẩu của bạn",
-        "PasswordMustBeAtLeast6Characters": "Mật khẩu phải có ít nhất 6 ký tự",
-        "ForgotPassword": "Quên mật khẩu?",
-        "Register": "Đăng ký"
+  "LoginPage": {
+    "Name": "FamilyHealth",
+    "Welcome": "Chào mừng đến với",
+    "Login": "Đăng nhập",
+    "LoginToProject": "Đăng nhập vào ",
+    "Email": "Email",
+    "EnterYourEmail": "Nhập email của bạn",
+    "PleaseEnterYourEmail": "Vui lòng nhập email",
+    "PleaseEnterAValidEmail": "Vui lòng nhập email hợp lệ",
+    "Password": "Mật khẩu",
+    "EnterYourPassword": "Nhập mật khẩu của bạn",
+    "PleaseEnterYourPassword": "Vui lòng nhập mật khẩu",
+    "ForgotPassword": "Quên mật khẩu?",
+    "Register": "Đăng ký"
+  },
+  "Dashboard": {
+    "Title": "Bảng điều khiển gia đình",
+    "Welcome": "Xin chào",
+    "Notifications": "Thông báo",
+    "Stats": {
+      "Members": "Thành viên",
+      "Healthy": "Khỏe mạnh",
+      "Attention": "Cần chú ý",
+      "Monitor": "Cần theo dõi",
+      "Upcoming": "Sắp tới",
+      "ThisMonth": "Trong tháng",
+      "Unread": "Chưa đọc"
+    },
+    "Tabs": {
+      "Members": "Thành viên",
+      "Records": "Hồ sơ y tế",
+      "Appointments": "Lịch khám",
+      "Notifications": "Thông báo"
+    },
+    "Members": {
+      "Title": "Thành viên gia đình",
+      "Subtitle": "Quản lý thông tin sức khỏe của các thành viên",
+      "Add": "Thêm thành viên",
+      "Role": "Vai trò",
+      "Age": "Tuổi",
+      "Gender": "Giới tính",
+      "BloodType": "Nhóm máu",
+      "Allergies": "Dị ứng",
+      "Conditions": "Tình trạng",
+      "LastVisit": "Khám cuối",
+      "ViewDetails": "Xem chi tiết",
+      "Status": {
+        "Healthy": "Khỏe mạnh",
+        "Attention": "Cần chú ý",
+        "Normal": "Bình thường"
+      }
+    },
+    "Records": {
+      "Title": "Hồ sơ y tế",
+      "Subtitle": "Theo dõi lịch sử y tế của tất cả thành viên",
+      "Completed": "Hoàn thành",
+      "Upcoming": "Sắp tới"
+    },
+    "Appointments": {
+      "Title": "Lịch khám sắp tới",
+      "Subtitle": "Các cuộc hẹn và lịch khám của gia đình",
+      "Change": "Thay đổi",
+      "Confirm": "Xác nhận"
+    },
+    "Notifs": {
+      "Title": "Thông báo",
+      "Subtitle": "Tin tức và cập nhật quan trọng về sức khỏe",
+      "Priority": {
+        "High": "Cao",
+        "Medium": "Trung bình",
+        "Low": "Thấp"
+      }
+    },
+    "Chat": {
+      "Title": "Hỗ trợ trực tuyến",
+      "Welcome": "Xin chào! Tôi là trợ lý ảo y tế. Tôi có thể giúp gì cho gia đình bạn hôm nay?",
+      "Placeholder": "Nhập tin nhắn...",
+      "Response": "Cảm ơn bạn đã đặt câu hỏi. Hệ thống sẽ kết nối với bác sĩ chuyên khoa sớm nhất."
     }
+  },
+  "Settings": {
+    "Title": "Cài đặt tài khoản",
+    "Subtitle": "Quản lý thông tin cá nhân và bảo mật",
+    "PersonalInfo": "Thông tin cá nhân",
+    "FullName": "Họ và tên",
+    "Phone": "Số điện thoại",
+    "Address": "Địa chỉ",
+    "Security": "Bảo mật & Tài khoản",
+    "Email": "Email đăng nhập",
+    "Password": "Mật khẩu",
+    "LastChanged": "Lần đổi cuối",
+    "ForgotPassword": "Quên mật khẩu?",
+    "Save": "Lưu thay đổi",
+    "Cancel": "Hủy",
+    "SavedMsg": "Đã lưu thay đổi!"
+  }
 }
