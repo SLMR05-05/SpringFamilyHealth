@@ -8,11 +8,27 @@ import { AuthRoutes } from './routes/AuthRoutes';
 // muon test thi thay admin thanh doctor
 const App = () => {
   const routes = useRoutes([
-    { path: '/', element: <Navigate to="/auth" replace /> },
-    AuthRoutes,
-    { path: '*', element: <Navigate to="/auth" replace /> }
+    { path: '/', element: <Navigate to="/admin" replace /> },
+    AdminRoutes,
+    { path: '*', element: <Navigate to="/admin" replace /> }
   ]);
   return routes;
+
+  // const routes = useRoutes([
+  //   { path: '/', element: <Navigate to="/doctor" replace /> },
+  //   DoctorRoutes,
+  //   { path: '*', element: <Navigate to="/doctor" replace /> }
+  // ]);
+  // return routes;
+
+  // const routes = useRoutes([
+  //   { path: '/', element: <Navigate to="/auth" replace /> },
+  //   AuthRoutes,
+  //   { path: '*', element: <Navigate to="/auth" replace /> }
+  // ]);
+  // return routes;
+
+
 };
 
 export default App;
