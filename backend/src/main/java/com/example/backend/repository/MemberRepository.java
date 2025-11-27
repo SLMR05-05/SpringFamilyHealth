@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Integer> {
     
@@ -17,5 +18,11 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
            "LEFT JOIN FETCH m.user " +
            "WHERE m.family.doctor.doctorId = :doctorId")
     List<Member> findAllByDoctorId(@Param("doctorId") Integer doctorId);
+    
+    /**
+     * Tìm member theo userId và eager load family để tránh lazy loading exception
+     */
+    @Query("SELECT m FROM Member m LEFT JOIN FETCH m.family WHERE m.user.userId = :userId")
+    Optional<Member> findByUserId(@Param("userId") Integer userId);
 }
 

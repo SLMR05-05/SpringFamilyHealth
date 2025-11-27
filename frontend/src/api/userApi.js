@@ -27,6 +27,11 @@ const userApi = {
   remove(id) {
     return axiosClient.delete(`/users/${id}`);
   },
+  
+  // Get current user's family
+  getMyFamily() {
+    return axiosClient.get("/users/me/family");
+  },
 };
 
 export default userApi;

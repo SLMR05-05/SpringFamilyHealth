@@ -1,9 +1,9 @@
 {
-    "LoginPage": {
+  "LoginPage": {
     "Name": "FamilyHealth",
     "Welcome": "Welcome to",
     "Login": "Login",
-      "LoginToProject": "Login to ",
+    "LoginToProject": "Login to ",
     "Email": "Email",
     "EnterYourEmail": "Enter your email",
     "PleaseEnterYourEmail": "Please enter your email",
@@ -13,5 +13,86 @@
     "PleaseEnterYourPassword": "Please enter your password",
     "ForgotPassword": "Forgot password?",
     "Register": "Register"
+  },
+  "Dashboard": {
+    "Title": "Family Dashboard",
+    "Welcome": "Welcome",
+    "Notifications": "Notifications",
+    "Stats": {
+      "Members": "Members",
+      "Healthy": "Healthy",
+      "Attention": "Attention Needed",
+      "Monitor": "Needs monitoring",
+      "Upcoming": "Upcoming",
+      "ThisMonth": "This month",
+      "Unread": "Unread"
+    },
+    "Tabs": {
+      "Members": "Family Members",
+      "Records": "Medical Records",
+      "Appointments": "Appointments",
+      "Notifications": "Notifications"
+    },
+    "Members": {
+      "Title": "Family Members",
+      "Subtitle": "Manage health information for family members",
+      "Add": "Add Member",
+      "Role": "Role",
+      "Age": "Age",
+      "Gender": "Gender",
+      "BloodType": "Blood Type",
+      "Allergies": "Allergies",
+      "Conditions": "Conditions",
+      "LastVisit": "Last Visit",
+      "ViewDetails": "View Details",
+      "Status": {
+        "Healthy": "Healthy",
+        "Attention": "Attention",
+        "Normal": "Normal"
+      }
+    },
+    "Records": {
+      "Title": "Medical Records",
+      "Subtitle": "Track medical history of all members",
+      "Completed": "Completed",
+      "Upcoming": "Upcoming"
+    },
+    "Appointments": {
+      "Title": "Upcoming Appointments",
+      "Subtitle": "Family appointments and schedules",
+      "Change": "Reschedule",
+      "Confirm": "Confirm"
+    },
+    "Notifs": {
+      "Title": "Notifications",
+      "Subtitle": "Important news and health updates",
+      "Priority": {
+        "High": "High",
+        "Medium": "Medium",
+        "Low": "Low"
+      }
+    }
+  },
+  "Settings": {
+    "Title": "Account Settings",
+    "Subtitle": "Manage personal info and security",
+    "PersonalInfo": "Personal Information",
+    "FullName": "Full Name",
+    "Phone": "Phone Number",
+    "Address": "Address",
+    "Security": "Security & Account",
+    "Email": "Login Email",
+    "Password": "Password",
+    "LastChanged": "Last changed",
+    "ForgotPassword": "Forgot password?",
+    "Save": "Save Changes",
+    "Cancel": "Cancel",
+    "SavedMsg": "Changes saved!"
+  },
+  "Chat": {
+    "Title": "Online Support",
+    "Welcome": "Hello! I am your medical virtual assistant. How can I help your family today?",
+    "Placeholder": "Type a message...",
+    "Response": "Thank you for your question. The system will connect you with a specialist shortly."
   }
 }

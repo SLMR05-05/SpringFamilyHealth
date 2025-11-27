@@ -27,6 +27,16 @@ const familyApi = {
   remove(id) {
     return axiosClient.delete(`/families/${id}`);
   },
+
+  // Get dashboard data for a family
+  getDashboard(familyId) {
+    return axiosClient.get(`/families/${familyId}/dashboard`);
+  },
+
+  // Get medical records for a family
+  getMedicalRecords(familyId) {
+    return axiosClient.get(`/families/${familyId}/medical-records`);
+  },
 };
 
 export default familyApi;
