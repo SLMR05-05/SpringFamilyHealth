@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Typography, Form, Input, Select, DatePicker, TimePicker, Space, message, Divider ,Row ,Col} from 'antd';
-import { UserOutlined, ClockCircleOutlined, CalendarOutlined, HeartOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Modal, Button, Typography, Form, Input, Select, DatePicker, TimePicker, Space, message, Divider, Row, Col } from 'antd';
+import { UserOutlined, ClockCircleOutlined, CalendarOutlined, HeartOutlined, SaveOutlined, CloseOutlined, PhoneOutlined } from '@ant-design/icons'; // ⭐️ Thêm PhoneOutlined ⭐️
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Option } = Select;
 
-// Dữ liệu giả định
-const PATIENT_LIST = ['Nguyễn Văn A', 'Trần Thị B', 'Lê Văn C', 'Phạm Thị D'];
+// Dữ liệu giả định (Giữ nguyên, nhưng không dùng PATIENT_LIST)
 const APPOINTMENT_TYPES = ['Khám tổng quát', 'Tái khám', 'Tư vấn sức khỏe', 'Kiểm tra định kỳ', 'Khám chuyên khoa'];
 
 const CreateAppointmentModal = ({ open, onClose, onSave, selectedDateKey }) => {
@@ -27,6 +26,7 @@ const CreateAppointmentModal = ({ open, onClose, onSave, selectedDateKey }) => {
                 });
             } else {
                 form.setFieldsValue({
+                    date: dayjs(),
                     time: dayjs('09:00', 'HH:mm')
                 });
             }
@@ -46,7 +46,9 @@ const CreateAppointmentModal = ({ open, onClose, onSave, selectedDateKey }) => {
                 dateKey,
                 time: timeStr,
                 period: period,
+                // ⭐️ LẤY DỮ LIỆU TỪ INPUT MỚI ⭐️
                 name: values.patientName,
+                phone: values.patientPhone, // Thêm số điện thoại vào dữ liệu
                 type: values.type,
                 notes: values.notes || 'Không có ghi chú.',
             };
@@ -80,24 +82,29 @@ const CreateAppointmentModal = ({ open, onClose, onSave, selectedDateKey }) => {
                 onFinish={handleFormSubmit}
                 className="mt-4"
             >
-                <Form.Item
-                    name="patientName"
-                    label="Chọn Bệnh Nhân"
-                    rules={[{ required: true, message: 'Vui lòng chọn bệnh nhân!' }]}
-                >
-                    <Select
-                        showSearch
-                        placeholder="Tìm kiếm hoặc chọn bệnh nhân"
-                        optionFilterProp="children"
-                        filterOption={(input, option) =>
-                            (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                        }
-                    >
-                        {PATIENT_LIST.map(name => (
-                            <Option key={name} value={name}>{name}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        {/* ⭐️ INPUT: Tên Bệnh Nhân ⭐️ */}
+                        <Form.Item
+                            name="patientName"
+                            label="Tên Bệnh Nhân"
+                            rules={[{ required: true, message: 'Vui lòng nhập tên bệnh nhân!' }]}
+                        >
+                            <Input prefix={<UserOutlined />} placeholder="Ví dụ: Nguyễn Văn A" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        {/* ⭐️ INPUT: Số Điện Thoại ⭐️ */}
+                        <Form.Item
+                            name="patientPhone"
+                            label="Số Điện Thoại"
+                            rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' },
+                                    { pattern: /^\d{10,11}$/, message: 'Số điện thoại không hợp lệ.' }]}
+                        >
+                            <Input prefix={<PhoneOutlined />} placeholder="Ví dụ: 0901234567" maxLength={11} />
+                        </Form.Item>
+                    </Col>
+                </Row>
 
                 <Form.Item
                     name="type"

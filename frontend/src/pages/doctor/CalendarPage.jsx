@@ -1,4 +1,4 @@
-import { Button, Card, Typography, Grid, Space, Modal, Row, Col, Divider, Tag } from "antd";
+import { Button, Card, Typography, Grid, Space, Modal, Row, Col, Divider, Tag, message } from "antd";
 import React, { useState, useMemo } from "react";
 import {
   ClockCircleOutlined,
@@ -9,37 +9,41 @@ import {
   RedoOutlined,
   CloseOutlined, 
   ReloadOutlined,
-  PlusOutlined // ⭐️ IMPORT ICON MỚI ⭐️
+  PlusOutlined, // ⭐️ IMPORT ICON MỚI ⭐️
+  SaveOutlined,
+  PhoneOutlined // Import icon điện thoại
 } from "@ant-design/icons";
-import CreateAppointmentModal from "../../components/modal/CreateAppointmentModal"; // ⭐️ IMPORT MODAL MỚI ⭐️
+// Loại bỏ import CreateAppointmentModal nếu bạn muốn nó là component cùng cấp
+import CreateAppointmentModal from "../../components/modal/CreateAppointmentModal"; 
 
 const { Text, Title } = Typography; 
 const { useBreakpoint } = Grid;
 
 
-// --- Dữ liệu chi tiết Lịch hẹn theo ngày (Dữ liệu State) ---
+// --- Dữ liệu chi tiết Lịch hẹn theo ngày (ĐÃ THÊM TRƯỜNG PHONE) ---
 // Key là chuỗi ngày tháng: DD/MM/YYYY
 const detailedAppointmentsByDate = {
     "22/11/2025": [
-        { id: 101, time: "09:00", period: "SÁNG", name: "Hoàng Văn Giang", type: "Khám tổng quát", completed: true, isCancelled: false, statusText: "Đã hoàn thành", notes: "Bệnh nhân đã khám tổng quát, không có vấn đề nghiêm trọng." },
-        { id: 102, time: "10:30", period: "SÁNG", name: "Ngô Thị Hà", type: "Tái khám", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Bệnh nhân cần mang theo kết quả xét nghiệm máu gần nhất." },
-        { id: 103, time: "02:00", period: "CHIỀU", name: "Lý Anh Kiệt", type: "Tư vấn sức khỏe", completed: true, isCancelled: true, statusText: "Đã hủy hẹn", notes: "Tư vấn về chế độ ăn cho người cao tuổi." },
-        { id: 104, time: "04:00", period: "CHIỀU", name: "Trần Thị Lan", type: "Kiểm tra định kỳ", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Kiểm tra định kỳ sau 3 tháng tiêm vắc xin." },
+        { id: 101, time: "09:00", period: "SÁNG", name: "Hoàng Văn Giang", phone: "0901112233", type: "Khám tổng quát", completed: true, isCancelled: false, statusText: "Đã hoàn thành", notes: "Bệnh nhân đã khám tổng quát, không có vấn đề nghiêm trọng." },
+        { id: 102, time: "10:30", period: "SÁNG", name: "Ngô Thị Hà", phone: "0912345678", type: "Tái khám", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Bệnh nhân cần mang theo kết quả xét nghiệm máu gần nhất." },
+        { id: 103, time: "02:00", period: "CHIỀU", name: "Lý Anh Kiệt", phone: "0987654321", type: "Tư vấn sức khỏe", completed: true, isCancelled: true, statusText: "Đã hủy hẹn", notes: "Tư vấn về chế độ ăn cho người cao tuổi." },
+        { id: 104, time: "04:00", period: "CHIỀU", name: "Trần Thị Lan", phone: "0945678901", type: "Kiểm tra định kỳ", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Kiểm tra định kỳ sau 3 tháng tiêm vắc xin." },
     ],
     "23/11/2025": [
-        { id: 201, time: "08:30", period: "SÁNG", name: "Lê Văn An", type: "Khám chuyên khoa", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Chuẩn bị hồ sơ." },
-        { id: 202, time: "11:00", period: "SÁNG", name: "Phạm Thúy Hằng", type: "Kiểm tra mắt", completed: true, isCancelled: false, statusText: "Đã hoàn thành", notes: "Mang theo kính cũ." },
+        { id: 201, time: "08:30", period: "SÁNG", name: "Lê Văn An", phone: "0977889900", type: "Khám chuyên khoa", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Chuẩn bị hồ sơ." },
+        { id: 202, time: "11:00", period: "SÁNG", name: "Phạm Thúy Hằng", phone: "0966554433", type: "Kiểm tra mắt", completed: true, isCancelled: false, statusText: "Đã hoàn thành", notes: "Mang theo kính cũ." },
     ],
     "26/11/2025": [
-        { id: 301, time: "01:00", period: "CHIỀU", name: "Vũ Minh Tuấn", type: "Khám răng", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Đến đúng giờ để tránh chờ lâu." },
+        { id: 301, time: "01:00", period: "CHIỀU", name: "Vũ Minh Tuấn", phone: "0933221100", type: "Khám răng", completed: false, isCancelled: false, statusText: "Chờ khám", notes: "Đến đúng giờ để tránh chờ lâu." },
     ],
 };
 
 
-// --- Component AppointmentDetailModal (Giữ nguyên) ---
+// --- Component AppointmentDetailModal (ĐÃ CẬP NHẬT HIỂN THỊ PHONE) ---
 const AppointmentDetailModal = ({ isVisible, onClose, appointmentDetail, onCancel, onComplete, onRestore }) => {
     const { 
         patientName = "Không rõ",
+        phone = "N/A", // ⭐️ Lấy phone từ prop ⭐️
         time = "Không rõ",
         period = "", 
         date = "Không rõ",
@@ -78,6 +82,11 @@ const AppointmentDetailModal = ({ isVisible, onClose, appointmentDetail, onCance
                         <Text className="text-xl font-bold text-indigo-600">{patientName}</Text>
                     </div>
 
+                        {/* ⭐️ HIỂN THỊ SỐ ĐIỆN THOẠI MỚI ⭐️ */}
+                    
+                    {/* Kết thúc hiển thị Số điện thoại */}
+
+
                     <div className='bg-gray-50 p-3 rounded-lg'>
                         <Text strong className="block text-gray-500 text-sm mb-1">Thời gian</Text>
                         <Text className="text-base text-gray-800 font-mono">{time} {period}</Text>
@@ -86,6 +95,11 @@ const AppointmentDetailModal = ({ isVisible, onClose, appointmentDetail, onCance
                     <div className='bg-gray-50 p-3 rounded-lg'>
                         <Text strong className="block text-gray-500 text-sm mb-1">Ngày hẹn</Text>
                         <Text className="text-base text-gray-800">{date}</Text>
+                    </div>
+
+                    <div className='bg-gray-50 p-3 rounded-lg'>
+                        <Text strong className="block text-gray-500 text-sm mb-1">Số điện thoại</Text>
+                        <Text className="text-base text-gray-800 font-mono">  <PhoneOutlined className="mr-2 text-base text-gray-500" /> {phone}</Text>
                     </div>
 
                     <div className="col-span-2 mt-2">
@@ -299,13 +313,14 @@ const CalendarPage = () => {
   };
 
 
-  // HÀM XỬ LÝ MỞ MODAL 
+  // HÀM XỬ LÝ MỞ MODAL (ĐÃ CẬP NHẬT TRUYỀN DỮ LIỆU)
   const handleViewAppointmentDetail = (appointment) => {
     const dateKey = getFormattedDateKey(selectedDayDetail);
     setSelectedAppointment({
         id: appointment.id,
         dateKey: dateKey, // Truyền DateKey để cập nhật state sau này
         patientName: appointment.name,
+        phone: appointment.phone || 'N/A', // ⭐️ FIX: Lấy phone từ appointment (dữ liệu mẫu) ⭐️
         time: appointment.time, 
         period: appointment.period, 
         date: selectedDayDetail, 
@@ -320,7 +335,7 @@ const CalendarPage = () => {
   
   // ⭐️ HÀM XỬ LÝ TẠO LỊCH HẸN MỚI ⭐️
   const handleCreateAppointment = (newAppointmentData) => {
-    const { dateKey, time, period, name, type, notes } = newAppointmentData;
+    const { dateKey, time, period, name, phone, type, notes } = newAppointmentData; // ⭐️ FIX: Destructure phone ⭐️
     
     const newId = Date.now(); // Tạo ID duy nhất
 
@@ -329,6 +344,7 @@ const CalendarPage = () => {
         time: time, 
         period: period, 
         name: name, 
+        phone: phone, // ⭐️ FIX: Lưu phone ⭐️
         type: type,
         completed: false, 
         isCancelled: false, 
@@ -341,12 +357,15 @@ const CalendarPage = () => {
         
         return {
             ...prevData,
-            [dateKey]: [...appointmentsOnDay, newAppointment] // Thêm cuộc hẹn mới
+            [dateKey]: [...appointmentsOnDay, newAppointment].sort((a, b) => a.time.localeCompare(b.time)) // Thêm cuộc hẹn mới
         };
     });
     
     // Cập nhật ngày được chọn nếu lịch hẹn mới nằm ở ngày đó, để nó hiển thị ngay lập tức
-    const fullDateString = new Date(new Date(dateKey.split('/').reverse().join('-'))).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+    // Cần chuyển dateKey về dạng chuỗi đầy đủ để khớp với selectedDayDetail
+    const [d, m, y] = dateKey.split('/');
+    const dateObject = new Date(y, m - 1, d);
+    const fullDateString = dateObject.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
     setSelectedDayDetail(fullDateString);
   };
 
@@ -449,6 +468,7 @@ const renderScheduleInDay = (dateStr) => {
             </div>
           ))}
         </div>
+        
       </div>
     );
   };
@@ -507,6 +527,7 @@ const renderScheduleInDay = (dateStr) => {
                 Tuần Hiện Tại
             </Button>
         </div>
+        
       </div>
 
       {/* CALENDAR VIEW CONTENT */}
@@ -592,7 +613,7 @@ const renderScheduleInDay = (dateStr) => {
         open={isCreateModalVisible}
         onClose={() => setIsCreateModalVisible(false)}
         onSave={handleCreateAppointment}
-        // Truyền dateKey của ngày đang chọn để làm mặc định cho DatePicker
+        // Truyền dateKey của ngày đang chọn để làm mặc định cho DatePicker
         selectedDateKey={getFormattedDateKey(selectedDayDetail)} 
     />
     </>
