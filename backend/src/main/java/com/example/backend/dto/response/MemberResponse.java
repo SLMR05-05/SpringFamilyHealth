@@ -13,6 +13,12 @@ public class MemberResponse {
     private Float height;
     private String relationship;
     private String roleInFamily;
+    
+    // Additional fields from User and Member
+    private String name;
+    private String phone;
+    private String email;
+    private String address;
 
     public Integer getMemberId() { return memberId; }
     public void setMemberId(Integer memberId) { this.memberId = memberId; }
@@ -34,4 +40,13 @@ public class MemberResponse {
     public void setRelationship(String relationship) { this.relationship = relationship; }
     public String getRoleInFamily() { return roleInFamily; }
     public void setRoleInFamily(String roleInFamily) { this.roleInFamily = roleInFamily; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 }

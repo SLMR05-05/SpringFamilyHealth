@@ -36,4 +36,17 @@ public class MedicationService {
 
     @Transactional
     public void delete(Integer id) { repo.delete(findById(id)); }
+
+    /**
+     * Find medication by name, create if not exists
+     */
+    @Transactional
+    public Medication findOrCreateByName(String medicationName) {
+        return repo.findByMedicationName(medicationName)
+                .orElseGet(() -> {
+                    Medication newMed = new Medication();
+                    newMed.setMedicationName(medicationName);
+                    return repo.save(newMed);
+                });
+    }
 }

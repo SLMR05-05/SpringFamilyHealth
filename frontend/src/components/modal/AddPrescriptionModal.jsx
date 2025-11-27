@@ -1,26 +1,128 @@
-import { Modal, Button, Typography, Input, Checkbox, Space, Select,Divider } from 'antd';
+import { Modal, Button, Typography, Input, Checkbox, Space, Select, Divider, message } from 'antd';
 import React, { useState } from 'react';
 import { CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { prescriptionApi, prescriptionMedicationApi, visitHistoryApi } from '../../api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Dữ liệu thuốc mẫu ban đầu
-const initialMedications = [
-    { id: 1, drugName: "Metformin", dosage: "500mg", frequency: "Twice a day" },
-    { id: 2, drugName: "Lisinopril", dosage: "10mg", frequency: "Once a day" },
-];
-
-const AddPrescriptionModal = ({ isVisible, onClose, patientName = "Jane Doe", dob = "01/23/1985" }) => {
-    const [medications, setMedications] = useState(initialMedications);
+const AddPrescriptionModal = ({ isVisible, onClose, patientData, onSuccess }) => {
+    const [medications, setMedications] = useState([]);
     const [newDrug, setNewDrug] = useState({ drugName: '', dosage: '', frequency: '' });
+    const [diagnosisNotes, setDiagnosisNotes] = useState('');
+    const [treatmentPlan, setTreatmentPlan] = useState('');
+    const [confirmed, setConfirmed] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleSave = () => {
-        // Logic để gửi dữ liệu chẩn đoán và đơn thuốc
-        console.log("Saving Diagnosis and Prescription for:", patientName, medications);
-        // Sau khi lưu, đóng modal
-        onClose();
+    const handleSave = async () => {
+        try {
+            // Validation
+            if (!diagnosisNotes.trim()) {
+                message.error('Vui lòng nhập ghi chú chẩn đoán');
+                return;
+            }
+            if (!treatmentPlan.trim()) {
+                message.error('Vui lòng nhập kế hoạch điều trị');
+                return;
+            }
+            if (medications.length === 0) {
+                message.error('Vui lòng thêm ít nhất một loại thuốc');
+                return;
+            }
+            if (!confirmed) {
+                message.error('Vui lòng xác nhận đồng ý của bệnh nhân');
+                return;
+            }
+
+            setLoading(true);
+
+            // Step 1: Create visit history first (bệnh án)
+            let visit;
+            try {
+                const visitData = {
+                    memberId: patientData.memberId,
+                    visitDate: new Date().toISOString().split('T')[0],
+                    reason: `Kê đơn thuốc - ${medications.length} loại thuốc`,
+                    diagnosis: `${diagnosisNotes}\n\nĐiều trị: ${treatmentPlan}`,
+                };
+
+                const response = await visitHistoryApi.create(visitData);
+                console.log('✅ Step 1 - Full response:', response);
+                
+                // Handle both raw axios response and extracted data
+                visit = response.data || response;
+                console.log('✅ Step 1 - Visit data:', visit);
+                
+                if (!visit || !visit.visitId) {
+                    console.error('Visit object:', visit);
+                    throw new Error('Visit response không có visitId');
+                }
+            } catch (error) {
+                console.error('❌ Step 1 failed:', error);
+                throw new Error(`Không thể tạo bệnh án: ${error.message}`);
+            }
+            
+            // Step 2: Create prescription linked to visit
+            let prescription;
+            try {
+                const prescriptionData = {
+                    memberId: patientData.memberId,
+                    visitId: visit.visitId,
+                    note: `Đơn thuốc gồm ${medications.length} loại: ${medications.map(m => m.drugName).join(', ')}`,
+                };
+
+                console.log('📝 Step 2 - Prescription payload:', prescriptionData);
+                const response = await prescriptionApi.create(prescriptionData);
+                
+                // Handle both raw axios response and extracted data
+                prescription = response.data || response;
+                console.log('✅ Step 2 - Created prescription:', prescription);
+                
+                if (!prescription || !prescription.prescriptionId) {
+                    throw new Error('Prescription response không có prescriptionId');
+                }
+            } catch (error) {
+                console.error('❌ Step 2 failed:', error);
+                throw new Error(`Không thể tạo đơn thuốc: ${error.message}`);
+            }
+            
+            // Step 3: Add medications to prescription using by-name endpoint
+            try {
+                for (const med of medications) {
+                    await prescriptionMedicationApi.createByName({
+                        prescriptionId: prescription.prescriptionId,
+                        medicationName: med.drugName,
+                        dosage: med.dosage,
+                        frequency: med.frequency,
+                    });
+                }
+                console.log('✅ Step 3 - Added medications');
+            } catch (error) {
+                console.error('❌ Step 3 failed:', error);
+                throw new Error(`Không thể thêm thuốc vào đơn: ${error.message}`);
+            }
+
+            message.success('Kê đơn thuốc thành công');
+            
+            // Reset form
+            setMedications([]);
+            setDiagnosisNotes('');
+            setTreatmentPlan('');
+            setConfirmed(false);
+            
+            if (onSuccess) {
+                onSuccess();
+            }
+            
+            onClose();
+        } catch (error) {
+            console.error('Error saving prescription:', error);
+            const errorMsg = error.message || 'Lưu đơn thuốc thất bại';
+            message.error(errorMsg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = (id) => {
@@ -63,7 +165,9 @@ const AddPrescriptionModal = ({ isVisible, onClose, patientName = "Jane Doe", do
             </div>
 
             {/* PATIENT INFO */}
-            <Text className="text-gray-600 block mb-6">Bệnh nhân: {patientName}, DOB: {dob}</Text>
+            <Text className="text-gray-600 block mb-6">
+                Bệnh nhân: {patientData?.name || 'N/A'}, Mã BN: {patientData?.memberId || 'N/A'}
+            </Text>
 
             {/* DIAGNOSIS AND TREATMENT PLAN */}
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -73,6 +177,8 @@ const AddPrescriptionModal = ({ isVisible, onClose, patientName = "Jane Doe", do
                         rows={6}
                         placeholder="Nhập các phát hiện lâm sàng, triệu chứng và chẩn đoán..."
                         className="resize-none"
+                        value={diagnosisNotes}
+                        onChange={(e) => setDiagnosisNotes(e.target.value)}
                     />
                     <Text type="secondary" className="text-xs block mt-1">Trình bày chi tiết các phát hiện lâm sàng và đánh giá.</Text>
                 </div>
@@ -82,6 +188,8 @@ const AddPrescriptionModal = ({ isVisible, onClose, patientName = "Jane Doe", do
                         rows={6}
                         placeholder="Phác thảo kế hoạch hành động được đề xuất, thay đổi lối sống..."
                         className="resize-none"
+                        value={treatmentPlan}
+                        onChange={(e) => setTreatmentPlan(e.target.value)}
                     />
                     <Text type="secondary" className="text-xs block mt-1">Mô tả chiến lược điều trị không dùng thuốc.</Text>
                 </div>
@@ -154,14 +262,17 @@ const AddPrescriptionModal = ({ isVisible, onClose, patientName = "Jane Doe", do
             {/* FOOTER ACTIONS */}
             <div className="flex justify-between items-center pt-4">
                 <Space>
-                    <Checkbox>Tôi xác nhận bệnh nhân đã đồng ý cập nhật hồ sơ này.</Checkbox>
+                    <Checkbox checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}>
+                        Tôi xác nhận bệnh nhân đã đồng ý cập nhật hồ sơ này.
+                    </Checkbox>
                 </Space>
                 <Space>
-                    <Button onClick={onClose}>Thoát</Button>
+                    <Button onClick={onClose} disabled={loading}>Thoát</Button>
                     <Button 
                         type="primary" 
                         className="bg-green-600 hover:bg-green-700"
                         onClick={handleSave}
+                        loading={loading}
                     >
                         Lưu và Mã hóa Hồ sơ
                     </Button>

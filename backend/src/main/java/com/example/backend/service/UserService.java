@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.user.UserCreateRequest;
+import com.example.backend.dto.user.UserUpdateRequest;
 import com.example.backend.entity.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -57,7 +59,7 @@ public class UserService {
     }
 
     @Transactional
-    public User update(Integer id, User payload) {
+    public User update(Integer id, UserUpdateRequest payload) {
         User existing = findById(id);
 
         // If email changes, check uniqueness
@@ -79,6 +81,12 @@ public class UserService {
         existing.setName(payload.getName());
         existing.setPhone(payload.getPhone());
         existing.setEmail(payload.getEmail());
+        
+        // Update locked status if provided
+        if (payload.getLocked() != null) {
+            existing.setLocked(payload.getLocked());
+        }
+        
         try {
             return userRepository.save(existing);
         } catch (DataIntegrityViolationException ex) {

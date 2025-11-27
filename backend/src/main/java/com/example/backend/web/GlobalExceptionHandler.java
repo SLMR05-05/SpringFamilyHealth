@@ -21,9 +21,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handlingRuntimeException(RuntimeException runtimeException){
+        // Log stacktrace for debugging
+        runtimeException.printStackTrace();
         ApiResponse<Void> apiResponse = new ApiResponse<>();
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        // Include exception message when available to aid debugging in dev
+        String msg = runtimeException.getMessage();
+        apiResponse.setMessage(msg != null && !msg.isBlank() ? msg : ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
         return ResponseEntity.status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode().value()).body(apiResponse);
     }
 

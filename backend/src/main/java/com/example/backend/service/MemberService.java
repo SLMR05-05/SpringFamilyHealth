@@ -39,9 +39,20 @@ public class MemberService {
         existing.setHeight(payload.getHeight());
         existing.setRelationship(payload.getRelationship());
         existing.setRoleInFamily(payload.getRoleInFamily());
+        existing.setPhone(payload.getPhone());
+        existing.setEmail(payload.getEmail());
+        existing.setAddress(payload.getAddress());
         return repo.save(existing);
     }
 
     @Transactional
     public void delete(Integer id) { repo.delete(findById(id)); }
+
+    /**
+     * Lấy tất cả bệnh nhân (members) thuộc các gia đình do bác sĩ cụ thể quản lý
+     */
+    @Transactional(readOnly = true)
+    public List<Member> findAllByDoctorId(Integer doctorId) {
+        return repo.findAllByDoctorId(doctorId);
+    }
 }

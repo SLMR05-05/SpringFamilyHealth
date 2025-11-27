@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Form, Input, Button, Space, Typography } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined, CloseOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, LockOutlined, CloseOutlined, PhoneOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -55,6 +55,17 @@ const AddUserModal = ({ open, onCancel, onFinish }) => {
                     ]}
                 >
                     <Input prefix={<MailOutlined className="text-gray-400" />} placeholder="ví dụ: ten@email.com" />
+                </Form.Item>
+
+                {/* Số điện thoại */}
+                <Form.Item
+                    name="phone"
+                    label="Số điện thoại"
+                    rules={[
+                        { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại phải có 10-11 chữ số!' }
+                    ]}
+                >
+                    <Input prefix={<PhoneOutlined className="text-gray-400" />} placeholder="Ví dụ: 0909222333" />
                 </Form.Item>
 
                 {/* Mật khẩu */}

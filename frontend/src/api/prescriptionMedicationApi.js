@@ -18,6 +18,11 @@ const prescriptionMedicationApi = {
     return axiosClient.post("/prescription-medications", data);
   },
 
+  // Create prescription medication by medication name
+  createByName(data) {
+    return axiosClient.post("/prescription-medications/by-name", data);
+  },
+
   // Update prescription medication
   update(id, data) {
     return axiosClient.put(`/prescription-medications/${id}`, data);

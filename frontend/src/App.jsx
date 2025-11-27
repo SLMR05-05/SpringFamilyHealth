@@ -23,11 +23,8 @@ const AppRoutes = () => {
     },
     { path: '/', element: <Navigate to="/admin" replace /> },
     AdminRoutes,
-    { path: '*', element: <Navigate to="/admin" replace /> },
-    {
-      path: "/",
-      element: <Navigate to="/login" />
-    }
+    DoctorRoutes,
+    { path: '*', element: <Navigate to="/doctor" replace /> }
   ]);
   return routes;
 };

@@ -13,7 +13,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
       case 'admin':
         return <Navigate to="/admin" replace />;
       case 'doctor':
-        return <Navigate to="/doctor-dashboard" replace />;
+        return <Navigate to="/doctor" replace />;
       case 'user':
         return <Navigate to="/user-dashboard" replace />;
       default:

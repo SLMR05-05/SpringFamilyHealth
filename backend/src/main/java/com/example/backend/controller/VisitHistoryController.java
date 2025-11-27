@@ -25,7 +25,7 @@ public class VisitHistoryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<VisitHistoryResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<VisitHistoryResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -33,7 +33,7 @@ public class VisitHistoryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<VisitHistoryResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<VisitHistoryResponse>builder()
                 .result(toResponse(service.findById(id)))
@@ -41,7 +41,7 @@ public class VisitHistoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<VisitHistoryResponse> create(@Valid @RequestBody VisitHistoryCreateRequest req) {
         VisitHistory entity = new VisitHistory();
         entity.setMember(memberService.findById(req.getMemberId()));
@@ -56,7 +56,7 @@ public class VisitHistoryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<VisitHistoryResponse> update(@PathVariable Integer id, @Valid @RequestBody VisitHistoryUpdateRequest req) {
         VisitHistory payload = new VisitHistory();
         payload.setMember(memberService.findById(req.getMemberId()));

@@ -45,7 +45,7 @@ public class PrescriptionMedicationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<PrescriptionMedicationResponse> create(@Valid @RequestBody PrescriptionMedicationCreateRequest req) {
         PrescriptionMedication entity = new PrescriptionMedication();
         entity.setPrescription(prescriptionService.findById(req.getPrescriptionId()));
@@ -53,6 +53,29 @@ public class PrescriptionMedicationController {
         entity.setDosage(req.getDosage());
         entity.setDuration(req.getDuration());
         entity.setId(new PrescriptionMedicationId(req.getPrescriptionId(), req.getMedicationId()));
+        PrescriptionMedication created = service.create(entity);
+        return ApiResponse.<PrescriptionMedicationResponse>builder()
+                .result(toResponse(created))
+                .build();
+    }
+
+    /**
+     * Create prescription medication by medication name (auto-create medication if not exists)
+     * This endpoint is designed for frontend to add medications without knowing medicationId
+     */
+    @PostMapping("/by-name")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    public ApiResponse<PrescriptionMedicationResponse> createByName(@Valid @RequestBody com.example.backend.dto.prescriptionmedication.PrescriptionMedicationByNameRequest req) {
+        // Find or create medication by name
+        com.example.backend.entity.Medication medication = medicationService.findOrCreateByName(req.getMedicationName());
+        
+        // Create prescription medication
+        PrescriptionMedication entity = new PrescriptionMedication();
+        entity.setPrescription(prescriptionService.findById(req.getPrescriptionId()));
+        entity.setMedication(medication);
+        entity.setDosage(req.getDosage());
+        entity.setDuration(req.getFrequency()); // frequency is stored in duration field
+        entity.setId(new PrescriptionMedicationId(req.getPrescriptionId(), medication.getMedicationId()));
         PrescriptionMedication created = service.create(entity);
         return ApiResponse.<PrescriptionMedicationResponse>builder()
                 .result(toResponse(created))

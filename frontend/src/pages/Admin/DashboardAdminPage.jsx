@@ -1,14 +1,52 @@
-    import { Card, Typography, Row, Col } from 'antd';
+    import { Card, Typography, Row, Col, Spin } from 'antd';
     import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer } from 'recharts';
-    import React from 'react'; // Giữ lại React
+    import React, { useState, useEffect } from 'react';
+    import { userApi, doctorApi } from '../../api';
 
     const { Title, Text } = Typography;
 
-    const DashboardPage = () => { // ⭐️ Đã đổi tên thành DashboardPage
-        
-        // ⭐️ DỮ LIỆU TĨNH THAY THẾ CHO API HOOKS ⭐️
-        const todayUsersCount = 12; // Giá trị giả định
-        const todayContactsCount = 5; // Giá trị giả định
+    const DashboardPage = () => {
+        const [loading, setLoading] = useState(false);
+        const [stats, setStats] = useState({
+            todayUsersCount: 0,
+            todayDoctorsCount: 0,
+            totalUsers: 0,
+            totalDoctors: 0,
+        });
+
+        useEffect(() => {
+            fetchDashboardStats();
+        }, []);
+
+        const fetchDashboardStats = async () => {
+            try {
+                setLoading(true);
+                // Fetch users and doctors data
+                const [usersResponse, doctorsResponse] = await Promise.all([
+                    userApi.getAll(0, 100),
+                    doctorApi.getAll(0, 100)
+                ]);
+
+                const users = usersResponse.data?.content || [];
+                const doctors = doctorsResponse.data?.content || [];
+
+                // Calculate today's new users and doctors
+                const today = new Date().toDateString();
+                const todayUsers = users.filter(u => new Date(u.createdDate).toDateString() === today).length;
+                const todayDoctors = doctors.filter(d => new Date(d.createdDate).toDateString() === today).length;
+
+                setStats({
+                    todayUsersCount: todayUsers,
+                    todayDoctorsCount: todayDoctors,
+                    totalUsers: usersResponse.data?.totalElements || 0,
+                    totalDoctors: doctorsResponse.data?.totalElements || 0,
+                });
+            } catch (error) {
+                console.error('Không thể tải thống kê:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
         
         // Data for the bar chart (Website Views)
         const barData = [
@@ -30,25 +68,33 @@
             { name: 'T11', feedback: 420 },
         ];
 
+        if (loading) {
+            return (
+                <div className="p-6 flex items-center justify-center h-screen">
+                    <Spin size="large" />
+                </div>
+            );
+        }
+
         return (
             <div className="p-6">
                 <Row gutter={[16, 16]}>
                     
-                    {/* KPI CARD 1: Today Users - Dữ liệu tĩnh */}
+                    {/* KPI CARD 1: Today Users */}
                     <Col xs={24} sm={12} md={6}>
                         <Card className="shadow-md">
-                            <Title level={4}>Người dùng mới</Title>
-                            <Title level={2} className="text-green-600">+{todayUsersCount}</Title>
-                            <Text type="secondary">Just updated</Text>
+                            <Title level={4}>Người dùng mới hôm nay</Title>
+                            <Title level={2} className="text-green-600">+{stats.todayUsersCount}</Title>
+                            <Text type="secondary">Tổng: {stats.totalUsers} người dùng</Text>
                         </Card>
                     </Col>
                     
-                    {/* KPI CARD 2: Today Contacts - Dữ liệu tĩnh */}
+                    {/* KPI CARD 2: Today Doctors */}
                     <Col xs={24} sm={12} md={6}>
                         <Card className="shadow-md">
-                            <Title level={4}>Bác sĩ mới</Title>
-                            <Title level={2} className="text-green-600">+{todayContactsCount}</Title>
-                            <Text type="secondary">Just updated</Text>
+                            <Title level={4}>Bác sĩ mới hôm nay</Title>
+                            <Title level={2} className="text-green-600">+{stats.todayDoctorsCount}</Title>
+                            <Text type="secondary">Tổng: {stats.totalDoctors} bác sĩ</Text>
                         </Card>
                     </Col>
                     

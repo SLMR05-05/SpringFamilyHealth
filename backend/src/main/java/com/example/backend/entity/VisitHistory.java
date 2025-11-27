@@ -27,6 +27,10 @@ public class VisitHistory {
     @Column(name = "follow_up_date")
     private LocalDate followUpDate;
 
+    @ManyToOne
+    @JoinColumn(name = "doctor_id")
+    private Doctor doctor;
+
     public VisitHistory() {}
 
     public Integer getVisitId() { return visitId; }
@@ -41,4 +45,6 @@ public class VisitHistory {
     public void setDiagnosis(String diagnosis) { this.diagnosis = diagnosis; }
     public LocalDate getFollowUpDate() { return followUpDate; }
     public void setFollowUpDate(LocalDate followUpDate) { this.followUpDate = followUpDate; }
+    public Doctor getDoctor() { return doctor; }
+    public void setDoctor(Doctor doctor) { this.doctor = doctor; }
 }

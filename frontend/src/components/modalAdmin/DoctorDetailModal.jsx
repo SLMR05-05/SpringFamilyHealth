@@ -13,7 +13,7 @@ import {
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Giả định danh sách chuyên khoa và trạng thái
+// Giả định danh sách chuyên khoa
 const SPECIALTY_OPTIONS = [
   "Khoa Tim Mạch",
   "Khoa Nhi",
@@ -25,14 +25,12 @@ const SPECIALTY_OPTIONS = [
   "Khoa Nội",
   "Khoa Ngoại",
 ];
-const STATUS_OPTIONS = ["Kích hoạt", "Khóa"];
 
 const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [showPasswordField, setShowPasswordField] = useState(false); // State quản lý ẩn/hiện mật khẩu
 
-  const doctorData = doctor || {}; 
+  const doctorData = doctor || {};
 
   // Thiết lập giá trị ban đầu cho Form khi doctor thay đổi hoặc modal mở
   useEffect(() => {
@@ -40,14 +38,13 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
       form.setFieldsValue({
         name: doctor.name,
         email: doctor.email,
+        phone: doctor.phone,
         specialty: doctor.specialty,
         certificate_number: doctor.certificate_number || "",
-        status: doctor.status,
       });
-      // ⭐️ LOGIC CHÍNH: Reset trạng thái mật khẩu và form fields liên quan ⭐️
-      setShowPasswordField(false); 
-      form.setFieldValue('newPassword', undefined);
-      form.setFieldValue('confirmPassword', undefined);
+      // Reset password fields
+      form.setFieldValue("newPassword", undefined);
+      form.setFieldValue("confirmPassword", undefined);
     } else {
       form.resetFields();
     }
@@ -55,40 +52,40 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
 
   const handleFormSubmit = async (values) => {
     try {
-        setLoading(true);
+      setLoading(true);
 
-        // 1. Kiểm tra mật khẩu (chỉ kiểm tra nếu newPassword có giá trị)
-        if (values.newPassword) {
-            if (values.newPassword.length < 6) {
-                message.error("Mật khẩu phải có ít nhất 6 ký tự.");
-                setLoading(false);
-                return;
-            }
-            if (values.newPassword !== values.confirmPassword) {
-                message.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
-                setLoading(false);
-                return;
-            }
+      // 1. Kiểm tra mật khẩu (chỉ kiểm tra nếu newPassword có giá trị)
+      if (values.newPassword) {
+        if (values.newPassword.length < 6) {
+          message.error("Mật khẩu phải có ít nhất 6 ký tự.");
+          setLoading(false);
+          return;
         }
-        
-        // 2. Gộp dữ liệu thay đổi và gọi hàm onSave
-        const changes = {
-            name: values.name,
-            email: values.email,
-            specialty: values.specialty,
-            status: values.status,
-            certificate_number: values.certificate_number,
-            // Chỉ gửi mật khẩu nếu nó được điền
-            newPassword: values.newPassword || undefined, 
-        };
-        
-        // Giả lập await cho onSave (hàm cha sẽ xử lý đóng và message success)
-        await Promise.resolve(onSave(doctorData.key, changes)); 
+        if (values.newPassword !== values.confirmPassword) {
+          message.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Gộp dữ liệu thay đổi và gọi hàm onSave
+      const changes = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        specialty: values.specialty,
+        certificate_number: values.certificate_number,
+        // Chỉ gửi mật khẩu nếu nó được điền
+        newPassword: values.newPassword || undefined,
+      };
+
+      // Gọi onSave từ cha
+      await Promise.resolve(onSave(doctorData.key, changes));
 
     } catch (error) {
-        // message.error đã được xử lý trong validation ở trên
+      console.error('DoctorDetailModal save error', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -102,23 +99,23 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
       open={open}
       onCancel={onCancel}
       width={500}
-      footer={null} 
-      closeIcon={<CloseOutlined className="text-gray-500" />} 
+      footer={null}
+      closeIcon={<CloseOutlined className="text-gray-500" />}
       centered
     >
       <Form
         form={form}
         layout="vertical"
         name="edit_doctor_form"
-        onFinish={handleFormSubmit} 
+        onFinish={handleFormSubmit}
         preserve={false}
         className="mt-4"
       >
         {/* ID TÀI KHOẢN (THÔNG TIN CHỈ ĐỌC) */}
         <Text type="secondary" className="block mb-4">
-            ID hệ thống: {doctorData.key || 'N/A'}
+          ID hệ thống: {doctorData.key || "N/A"}
         </Text>
-        
+
         <Form.Item
           name="name"
           label="Tên Tài Khoản"
@@ -135,6 +132,10 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
           ]}
         >
           <Input prefix={<MailOutlined className="text-gray-400" />} />
+        </Form.Item>
+
+        <Form.Item name="phone" label="Số điện thoại">
+          <Input prefix={<UserOutlined className="text-gray-400" />} />
         </Form.Item>
 
         <Form.Item name="certificate_number" label="Mã Số Chứng Chỉ">
@@ -155,20 +156,6 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item
-          name="status"
-          label="Trạng Thái Tài Khoản"
-          rules={[{ required: true, message: 'Vui lòng chọn trạng thái!'  }]}
-        >
-          <Select placeholder="Chọn trạng thái">
-            {STATUS_OPTIONS.map((s) => (
-              <Option key={s} value={s}>
-                {s}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
         {/* Thông tin chỉ đọc: Ngày Đăng Ký */}
         <div className="mb-4">
           <Text strong className="block">
@@ -177,72 +164,18 @@ const DoctorDetailModal = ({ open, onCancel, doctor, onSave }) => {
           <Text type="secondary">{doctorData?.date || "N/A"}</Text>
         </div>
 
-        {/* --- Phần Mật Khẩu --- */}
-        
-        <Divider className="my-3" />
-        {/* Tiêu đề & Nút Toggle */}
-        <div className="flex justify-between items-center mb-4">
-            <Title level={5} className="mt-0 mb-0 flex items-center">
-                 Thay Đổi Mật Khẩu
-            </Title>
-            <Button 
-                type="dashed" 
-                size="small"
-                onClick={() => setShowPasswordField(!showPasswordField)}
-            >
-                {showPasswordField ? 'Ẩn trường mật khẩu' : 'Thay đổi mật khẩu'}
-            </Button>
-        </div>
-
-        {showPasswordField && (
-            <>
-                {/* Mật khẩu mới */}
-                <Form.Item
-                    name="newPassword"
-                    label="Mật khẩu mới"
-                    // ⭐️ BỎ REQUIRED: Chỉ cần dependency cho confirmPassword ⭐️
-                    hasFeedback
-                >
-                    <Input.Password prefix={<LockOutlined className="text-gray-400" />} placeholder="Để trống nếu không muốn thay đổi" />
-                </Form.Item>
-                
-                {/* Xác nhận Mật khẩu mới */}
-                <Form.Item
-                    name="confirmPassword"
-                    label="Xác nhận mật khẩu mới"
-                    dependencies={['newPassword']}
-                    rules={[
-                        ({ getFieldValue }) => ({
-                            validator(_, value) {
-                                // Nếu newPassword không có giá trị, bỏ qua validation này
-                                if (!getFieldValue('newPassword')) return Promise.resolve(); 
-                                
-                                if (getFieldValue('newPassword') === value) {
-                                    return Promise.resolve();
-                                }
-                                return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                            },
-                        }),
-                    ]}
-                    hasFeedback
-                >
-                    <Input.Password prefix={<LockOutlined className="text-gray-400" />} />
-                </Form.Item>
-            </>
-        )}
-        
         {/* FOOTER ACTIONS BÊN TRONG FORM */}
         <Form.Item className="mb-0">
-            <Space className="w-full justify-end mt-4">
-                <Button onClick={onCancel} disabled={loading}>
-                    Hủy bỏ
-                </Button>
-                <Button type="primary" htmlType="submit" className="bg-blue-600" loading={loading} icon={<SaveOutlined />}>
-                    Lưu thay đổi
-                </Button>
-            </Space>
+          <Space className="w-full justify-end mt-4">
+            <Button onClick={onCancel} disabled={loading}>
+              Hủy bỏ
+            </Button>
+            <Button type="primary" htmlType="submit" className="bg-blue-600" loading={loading} icon={<SaveOutlined />}>
+              Lưu thay đổi
+            </Button>
+          </Space>
         </Form.Item>
-        
+
       </Form>
     </Modal>
   );

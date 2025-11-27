@@ -28,7 +28,7 @@ public class PrescriptionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<PrescriptionResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<PrescriptionResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -36,7 +36,7 @@ public class PrescriptionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<PrescriptionResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<PrescriptionResponse>builder()
                 .result(toResponse(service.findById(id)))
@@ -44,7 +44,7 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<PrescriptionResponse> create(@Valid @RequestBody PrescriptionCreateRequest req) {
         Prescription entity = new Prescription();
         entity.setMember(memberService.findById(req.getMemberId()));
@@ -57,7 +57,7 @@ public class PrescriptionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<PrescriptionResponse> update(@PathVariable Integer id, @Valid @RequestBody PrescriptionUpdateRequest req) {
         Prescription payload = new Prescription();
         payload.setMember(memberService.findById(req.getMemberId()));

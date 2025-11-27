@@ -75,6 +75,9 @@ public class MemberController {
         payload.setHeight(request.getHeight());
         payload.setRelationship(request.getRelationship());
         payload.setRoleInFamily(request.getRoleInFamily());
+        payload.setPhone(request.getPhone());
+        payload.setEmail(request.getEmail());
+        payload.setAddress(request.getAddress());
         return ApiResponse.<MemberResponse>builder()
                 .result(toResponse(service.update(id, payload)))
                 .build();
@@ -99,6 +102,12 @@ public class MemberController {
         res.setHeight(m.getHeight());
         res.setRelationship(m.getRelationship());
         res.setRoleInFamily(m.getRoleInFamily());
+        res.setPhone(m.getPhone());
+        res.setEmail(m.getEmail());
+        res.setAddress(m.getAddress());
+        if (m.getUser() != null) {
+            res.setName(m.getUser().getName());
+        }
         return res;
     }
 }

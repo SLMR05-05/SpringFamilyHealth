@@ -116,6 +116,7 @@ public class AuthenticationService {
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS)))
                 .jwtID(UUID.randomUUID().toString())
+                .claim("userId", user.getUserId())
                 .claim("scope", buildScope(user))
                 .build();
 

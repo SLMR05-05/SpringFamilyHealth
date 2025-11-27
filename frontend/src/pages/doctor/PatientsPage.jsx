@@ -7,178 +7,214 @@ import {
   Space,
   Grid,
   Typography,
+  message,
 } from "antd";
 import {
   PlusOutlined,
   SearchOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 // ⭐️ Đảm bảo đường dẫn này đúng
 import PatientDetailModal from "../../components/modal/PatientDetailModal";
+import doctorApi from "../../api/doctorApi";
+import { useAuth } from "../../context/AuthProvider";
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
-// Dữ liệu chi tiết mẫu cho bệnh nhân Trần Thị Bích (Giữ nguyên)
-const detailedPatientData = {
-  name: "Trần Thị Bích",
-  id: "BN00124",
-  status: "Đã duyệt",
-  avatarUrl: "https://via.placeholder.com/100/7F9CF5/000000?text=TB",
-  birthDate: "15/05/1985",
-  gender: "Nữ",
-  phone: "0987 654 321",
-  email: "bich.tt@example.com",
-  address: "123 Đường ABC, Quận 1, TP.HCM",
-  bloodGroup: "O+",
-  allergies: "Penicillin",
-  history: [],
+// Format date helper
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
 };
 
-// Hàm lấy class trạng thái (Giữ nguyên)
-const getStatusPillClasses = (status) => {
-  switch (status) {
-    case "Chờ duyệt":
-      return { bg: "bg-amber-100", text: "text-amber-800" };
-    case "Đã duyệt":
-      return { bg: "bg-green-100", text: "text-green-800" };
-    default:
-      return { bg: "bg-gray-100", text: "text-gray-800" };
+// Helper để tính tuổi từ ngày sinh
+const calculateAge = (birthDate) => {
+  if (!birthDate) return "N/A";
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
   }
+  return age;
 };
-
-// Dữ liệu TỔNG THỂ (7 bản ghi)
-const ALL_PATIENT_DATA = [
-  {
-    key: "1",
-    name: "Lê Văn An",
-    id: "BN00123",
-    date: "18/07/  2025",
-    status: "Chờ duyệt",
-  },
-  {
-    key: "2",
-    name: "Trần Thị Bích",
-    id: "BN00124",
-    date: "17/07/  2025",
-    status: "Đã duyệt",
-  },
-  {
-    key: "3",
-    name: "Nguyễn Văn Cường",
-    id: "BN00125",
-    date: "17/07/  2025",
-    status: "Chờ duyệt",
-  },
-  {
-    key: "4",
-    name: "Phạm Thị Dung",
-    id: "BN00126",
-    date: "16/07/  2025",
-    status: "Đã duyệt",
-  },
-  {
-    key: "5",
-    name: "Hoàng Văn Giang",
-    id: "BN00127",
-    date: "15/07/  2025",
-    status: "Đã duyệt",
-  },
-  {
-    key: "6",
-    name: "Ngô Thị Hà",
-    id: "BN00128",
-    date: "14/07/  2025",
-    status: "Đã duyệt",
-  },
-  {
-    key: "7",
-    name: "Lý Anh Kiệt",
-    id: "BN00129",
-    date: "13/07/  2025",
-    status: "Đã duyệt",
-  },
-];
-
-const TOTAL_RECORDS = ALL_PATIENT_DATA.length;
-const PAGE_SIZE = 6; 
 
 const PatientsPage = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
 
-  // ⭐️ 1. STATE CHO PHÂN TRANG ⭐️
+  // STATE CHO DỮ LIỆU
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // STATE CHO PHÂN TRANG
   const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   // STATE CHO MODAL
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  // 2. HÀM XỬ LÝ XEM HỒ SƠ (Giữ nguyên)
+  // Fetch patients data từ backend
+  useEffect(() => {
+    fetchPatients();
+  }, [user]);
+
+  const fetchPatients = async () => {
+    if (!user?.userId) {
+      message.warning("Không tìm thấy thông tin bác sĩ");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await doctorApi.getPatients(user.userId);
+      const patientsData = response.data || [];
+      
+      // Transform data to match UI format
+      const transformedData = patientsData.map((member) => ({
+        key: member.memberId.toString(),
+        memberId: member.memberId,
+        name: member.name || `Bệnh nhân ${member.memberId}`,
+        id: `BN${member.memberId.toString().padStart(5, "0")}`,
+        age: member.age || calculateAge(member.dayOfBirth),
+        gender: member.gender === "MALE" ? "Nam" : member.gender === "FEMALE" ? "Nữ" : "Khác",
+        dayOfBirth: member.dayOfBirth,
+        date: formatDate(member.dayOfBirth),
+        weight: member.weight,
+        height: member.height,
+        relationship: member.relationship || "Không rõ",
+        roleInFamily: member.roleInFamily,
+        familyId: member.familyId,
+        userId: member.userId,
+        phone: member.phone || "Chưa cập nhật",
+        email: member.email || "Chưa cập nhật",
+        address: member.address || "Chưa cập nhật",
+      }));
+
+      setPatients(transformedData);
+      setFilteredPatients(transformedData);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      message.error("Không thể tải danh sách bệnh nhân");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Xử lý tìm kiếm
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredPatients(patients);
+    } else {
+      const filtered = patients.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+    }
+    setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+  }, [searchTerm, patients]);
+
+  // Xử lý xem hồ sơ
   const handleViewRecord = (record) => {
     const patientDetail = {
-      ...detailedPatientData,
+      memberId: record.memberId,
+      userId: record.userId,
+      familyId: record.familyId,
       name: record.name,
       id: record.id,
-      status: record.status,
+      status: "Đang điều trị",
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(record.name)}&background=7F9CF5&color=fff`,
+      birthDate: formatDate(record.dayOfBirth),
+      gender: record.gender,
+      age: record.age,
+      weight: record.weight,
+      height: record.height,
+      relationship: record.relationship,
+      roleInFamily: record.roleInFamily === "HEAD" ? "Chủ hộ" : "Thành viên",
+      phone: record.phone || "Chưa cập nhật",
+      email: record.email || "Chưa cập nhật",
+      address: record.address || "Chưa cập nhật",
+      history: [],
     };
     setSelectedPatient(patientDetail);
     setIsDetailModalVisible(true);
   };
 
-  // ⭐️ 3. HÀM XỬ LÝ KHI CHUYỂN TRANG
+  // Xử lý chuyển trang
   const handleTableChange = (pagination) => {
-    // Cập nhật trang hiện tại
     setCurrentPage(pagination.current);
   };
 
-  // 4. LOGIC HIỂN THỊ DỮ LIỆU CỦA TRANG HIỆN TẠI (Dùng cho dữ liệu tĩnh)
+  // Logic hiển thị dữ liệu của trang hiện tại
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const endIndex = startIndex + PAGE_SIZE;
-  const currentPatientData = ALL_PATIENT_DATA.slice(startIndex, endIndex);
+  const currentPatientData = filteredPatients.slice(startIndex, endIndex);
 
-  // Định nghĩa các cột cho Ant Design Table (Giữ nguyên)
+  // Định nghĩa các cột cho Ant Design Table
   const columns = [
     {
       title: "Tên Bệnh Nhân",
       dataIndex: "name",
       key: "name",
-      width: screens.lg ? "25%" : undefined,
+      width: screens.lg ? "20%" : undefined,
     },
     {
       title: "Mã Bệnh Nhân",
       dataIndex: "id",
       key: "id",
-      width: screens.lg ? "15%" : undefined,
+      width: screens.lg ? "12%" : undefined,
     },
     {
-      title: "Ngày Đăng Ký",
-      dataIndex: "date",
-      key: "date",
-      width: screens.lg ? "15%" : undefined,
+      title: "Tuổi / Giới tính",
+      key: "ageGender",
+      width: screens.lg ? "12%" : undefined,
+      render: (_, record) => `${record.age} tuổi / ${record.gender}`,
     },
     {
-      title: "Trạng thái hồ sơ",
-      dataIndex: "status",
-      key: "status",
-      width: screens.lg ? "20%" : undefined,
-      render: (status) => {
-        const { bg, text } = getStatusPillClasses(status);
-        return (
-          <span
-            className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${bg} ${text}`}
-          >
-            {status}
-          </span>
-        );
-      },
+      title: "Quan hệ",
+      dataIndex: "relationship",
+      key: "relationship",
+      width: screens.lg ? "12%" : undefined,
+    },
+    {
+      title: "Vai trò",
+      dataIndex: "roleInFamily",
+      key: "roleInFamily",
+      width: screens.lg ? "12%" : undefined,
+      render: (role) => (
+        <span
+          className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+            role === "HEAD"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {role === "HEAD" ? "Chủ hộ" : "Thành viên"}
+        </span>
+      ),
+    },
+    {
+      title: "Cân nặng / Chiều cao",
+      key: "weightHeight",
+      width: screens.lg ? "15%" : undefined,
+      render: (_, record) =>
+        `${record.weight ? record.weight + " kg" : "N/A"} / ${
+          record.height ? record.height + " cm" : "N/A"
+        }`,
     },
     {
       title: "Hành Động",
       key: "action",
-      width: screens.lg ? "15%" : undefined,
+      width: screens.lg ? "12%" : undefined,
       render: (_, record) => (
         <Button
           type="primary"
@@ -198,10 +234,9 @@ const PatientsPage = () => {
         <div>
           <h1 className="text-2xl font-bold">Bệnh nhân của tôi</h1>
           <p className="text-gray-500">
-            Quản lý danh sách bệnh nhân và xem hồ sơ chi tiết.
+            Tổng số: {filteredPatients.length} bệnh nhân
           </p>
         </div>
-        
       </div>
 
       {/* SEARCH/FILTER SECTION */}
@@ -211,33 +246,18 @@ const PatientsPage = () => {
           prefix={<SearchOutlined />}
           className="lg:flex-1 h-10"
           allowClear
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <Space size="middle" className="flex justify-end w-full lg:w-auto">
-          <Select
-            defaultValue="Mới nhất"
-            className="w-full lg:w-36 h-10"
-            options={[
-              { value: "newest", label: "Mới nhất" },
-              { value: "oldest", label: "Cũ nhất" },
-              { value: "name_asc", label: "Tên (A-Z)" },
-              { value: "name_desc", label: "Tên (Z-A)" },
-            ]}
-          />
-
-          <Select
-            
-            defaultValue="Tất cả"
-            className="w-full lg:w-36 h-10"
-            options={[
-                { value: "all", label: "Tất cả" },
-              { value: "waited", label: "Chờ duyệt" },
-              { value: "approved", label: "Đã duyệt" },
-              
-              
-            ]}
-          />
-
-          
+          <Button
+            type="default"
+            icon={<SearchOutlined />}
+            onClick={fetchPatients}
+            loading={loading}
+          >
+            Làm mới
+          </Button>
         </Space>
       </div>
 
@@ -247,11 +267,11 @@ const PatientsPage = () => {
           columns={columns}
           dataSource={currentPatientData} // ⭐️ Dùng dữ liệu của trang hiện tại
           loading={loading}
-          onChange={handleTableChange} // ⭐️ Gắn hàm xử lý sự kiện thay đổi
+          onChange={handleTableChange}
           pagination={{
-            current: currentPage, // ⭐️ Trang hiện tại (State)
-            pageSize: PAGE_SIZE, // ⭐️ Kích thước trang cố định (6)
-            total: TOTAL_RECORDS, // ⭐️ Tổng số bản ghi (7)
+            current: currentPage,
+            pageSize: PAGE_SIZE,
+            total: filteredPatients.length,
             showSizeChanger: false,
             showQuickJumper: true,
             showTotal: (total, range) =>
@@ -265,6 +285,7 @@ const PatientsPage = () => {
         isVisible={isDetailModalVisible}
         onClose={() => setIsDetailModalVisible(false)}
         patientRecord={selectedPatient}
+        onRefresh={fetchPatients}
       />
     </div>
   );

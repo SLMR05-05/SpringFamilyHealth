@@ -17,11 +17,33 @@ export const AuthProvider = ({ children }) => {
       if (authenticated && token) {
         // Decode JWT to get user info (simple base64 decode)
         const tokenParts = token.split('.');
-        const payload = JSON.parse(atob(tokenParts[1]));
-        
+        const payload = JSON.parse(atob(tokenParts[1] || ''));
+
+        const extractRole = (p) => {
+          if (!p) return 'user';
+          // scope can be a space-separated string like "ROLE_ADMIN ROLE_USER"
+          if (typeof p.scope === 'string') {
+            const parts = p.scope.split(/\s+/).filter(Boolean);
+            const rolePart = parts.find(x => x.startsWith('ROLE_')) || parts[0];
+            return (rolePart || 'ROLE_USER').replace(/^ROLE_/, '').toLowerCase();
+          }
+          // sometimes roles/authorities are in arrays
+          if (Array.isArray(p.roles) && p.roles.length) {
+            const rp = p.roles.find(x => x.startsWith('ROLE_')) || p.roles[0];
+            return (rp || 'ROLE_USER').replace(/^ROLE_/, '').toLowerCase();
+          }
+          if (Array.isArray(p.authorities) && p.authorities.length) {
+            const rp = p.authorities.find(x => x.startsWith('ROLE_')) || p.authorities[0];
+            return (rp || 'ROLE_USER').replace(/^ROLE_/, '').toLowerCase();
+          }
+
+          return 'user';
+        };
+
         const userInfo = {
-          email: payload.sub, // subject is email
-          role: payload.scope?.replace('ROLE_', '').toLowerCase() || 'user', // Extract role from scope
+          userId: payload.userId, // Lấy userId từ claim
+          email: payload.sub || payload.email,
+          role: extractRole(payload),
           token: token,
         };
 

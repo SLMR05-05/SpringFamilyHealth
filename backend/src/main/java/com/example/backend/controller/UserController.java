@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserCreateRequest req) {
         User toSave = new User();
         toSave.setRole(req.getRole());
@@ -56,14 +56,14 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> update(@PathVariable Integer id, @Valid @RequestBody UserUpdateRequest req) {
-        User payload = new User();
-        payload.setRole(req.getRole());
-        payload.setPasswordHash(req.getPasswordHash());
-        payload.setName(req.getName());
-        payload.setPhone(req.getPhone());
-        payload.setEmail(req.getEmail());
+//        User payload = new User();
+//        payload.setRole(req.getRole());
+//        payload.setPasswordHash(req.getPasswordHash());
+//        payload.setName(req.getName());
+//        payload.setPhone(req.getPhone());
+//        payload.setEmail(req.getEmail());
         return ApiResponse.<UserResponse>builder()
-                .result(toResponse(userService.update(id, payload)))
+                .result(toResponse(userService.update(id, req)))
                 .build();
     }
 
@@ -81,6 +81,8 @@ public class UserController {
         res.setName(u.getName());
         res.setPhone(u.getPhone());
         res.setEmail(u.getEmail());
+        res.setLocked(u.getLocked());
+        res.setCreatedAt(u.getCreatedAt());
         return res;
     }
 }

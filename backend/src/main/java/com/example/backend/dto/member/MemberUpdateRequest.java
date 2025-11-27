@@ -20,6 +20,12 @@ public class MemberUpdateRequest {
     private String relationship;
     @Size(max = 50)
     private String roleInFamily;
+    @Size(max = 15)
+    private String phone;
+    @Size(max = 100)
+    private String email;
+    @Size(max = 500)
+    private String address;
 
     public Integer getUserId() { return userId; }
     public void setUserId(Integer userId) { this.userId = userId; }
@@ -39,4 +45,10 @@ public class MemberUpdateRequest {
     public void setRelationship(String relationship) { this.relationship = relationship; }
     public String getRoleInFamily() { return roleInFamily; }
     public void setRoleInFamily(String roleInFamily) { this.roleInFamily = roleInFamily; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 }

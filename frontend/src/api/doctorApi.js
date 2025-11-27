@@ -27,6 +27,11 @@ const doctorApi = {
   remove(id) {
     return axiosClient.delete(`/doctors/${id}`);
   },
+
+  // Get all patients (members) managed by a specific doctor
+  getPatients(doctorId) {
+    return axiosClient.get(`/doctors/${doctorId}/patients`);
+  },
 };
 
 export default doctorApi;

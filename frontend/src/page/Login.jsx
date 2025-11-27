@@ -26,10 +26,10 @@ export default function Login() {
         const userInfo = JSON.parse(localStorage.getItem('user'));
         switch (userInfo.role) {
           case "admin":
-            navigate("/dashboard");
+            navigate("/admin");
             break;
           case "doctor":
-            navigate("/doctor-dashboard");
+            navigate("/doctor");
             break;
           case "user":
             navigate("/user-dashboard");
