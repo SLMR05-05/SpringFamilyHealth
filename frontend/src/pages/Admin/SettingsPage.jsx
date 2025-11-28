@@ -138,35 +138,6 @@ const SettingsPage = () => {
           </div>
         </Card>
         
-        {/* PHẦN 2: CÀI ĐẶT THÔNG BÁO */}
-        {/* <Card className="shadow-lg mb-6 p-4">
-          <Title level={4} className="mt-0 mb-6">Cài đặt thông báo</Title>
-
-          <Space direction="vertical" className="w-full" size="large">
-            
-            <div className="flex justify-between items-center pb-2">
-              <div>
-                <Text className="block text-base font-medium">Thông báo qua Email</Text>
-                <Text type="secondary" className="text-sm">Nhận thông báo về lịch hẹn và hồ sơ mới qua email.</Text>
-              </div>
-              <Item name="notifyEmail" valuePropName="checked" noStyle>
-                <Switch className="bg-gray-300 checked:bg-blue-600" />
-              </Item>
-            </div>
-            
-            
-            
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="block text-base font-medium">Thông báo tin nhắn mới</Text>
-                <Text type="secondary" className="text-sm">Nhận thông báo khi có tin nhắn mới từ bệnh nhân.</Text>
-              </div>
-              <Item name="notifySms" valuePropName="checked" noStyle>
-                <Switch className="bg-gray-300 checked:bg-blue-600" />
-              </Item>
-            </div>
-          </Space>
-        </Card> */}
 
         {/* PHẦN 3: BẢO MẬT */}
         <Card className="shadow-lg mb-6 p-4">

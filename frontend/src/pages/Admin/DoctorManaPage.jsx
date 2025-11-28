@@ -186,7 +186,7 @@ function PendingDoctorsTable({ data, onApprove, onReject }) {
         width: "35%",
         render: (_, record) => <DoctorInfoCell name={record.name} email={record.email} />,
       },
-      { title: "CHUYÊN KHOA", dataIndex: "specialty", key: "specialty", width: "25%" },
+      { title: "MÔ TẢ", dataIndex: "specialty", key: "specialty", width: "25%" },
       { title: "NGÀY ĐĂNG KÝ", dataIndex: "date", key: "date", width: "25%" },
       {
         title: "HÀNH ĐỘNG",
@@ -223,7 +223,7 @@ function ActiveDoctorsTable({ data, onViewDetails, onDelete, paginationProps }) 
         width: "30%",
         render: (_, record) => <DoctorInfoCell name={record.name} email={record.email} />,
       },
-      { title: "CHUYÊN KHOA", dataIndex: "specialty", key: "specialty", width: "20%" },
+      { title: "MÔ TẢ", dataIndex: "specialty", key: "specialty", width: "20%" },
       {
         title: "TRẠNG THÁI",
         dataIndex: "status",
@@ -385,23 +385,7 @@ export default function DoctorManagementPage() {
       </div>
 
       <div className="space-y-1">
-        <div className="flex justify-start items-center space-x-3">
-          <Title level={4} className="m-0 font-semibold">
-            Bác sĩ chờ duyệt ({pendingDoctors.length})
-          </Title>
-          <Button
-            icon={isPendingTableVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-            type="text"
-            className="text-gray-500 hover:text-blue-600"
-            onClick={() => setIsPendingTableVisible((v) => !v)}
-          />
-        </div>
-
-        {isPendingTableVisible && (
-          <Card className="shadow-lg">
-            <PendingDoctorsTable data={pendingDoctors} onApprove={(d) => openModal("approve", d)} onReject={handleRejectPending} />
-          </Card>
-        )}
+        
 
         <Title level={4} className="m-0 font-semibold flex items-center">
           Bác sĩ đang hoạt động ({totalActiveUsers})

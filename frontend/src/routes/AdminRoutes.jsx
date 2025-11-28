@@ -6,7 +6,7 @@ const DashboardPage = Loadable(React.lazy(() => import('../pages/admin/Dashboard
 const UsersPage = Loadable(React.lazy(() => import('../pages/admin/UserManaPage')));
 const DoctorsPage = Loadable(React.lazy(() => import('../pages/admin/DoctorManaPage')));
 const ReportPage = Loadable(React.lazy(() => import('../pages/Admin/ReportsPage.jsx')));
-const SettingsPage = Loadable(React.lazy(() => import('../pages/admin/SettingsPage')));
+
 
 
 export const AdminRoutes = {
@@ -17,6 +17,6 @@ export const AdminRoutes = {
         {path:"users", element:<UsersPage/>},
         {path:"doctors", element:<DoctorsPage/>},
         {path:"reports", element:<ReportPage/>},
-        {path:"settings", element:<SettingsPage/>},
+        
     ]
 }

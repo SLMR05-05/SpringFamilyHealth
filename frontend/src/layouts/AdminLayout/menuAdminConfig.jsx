@@ -30,12 +30,7 @@ const MenuAdminConfig = () => {
         label: t("Báo cáo thống kê"),
        
     },
-    {
-        key:"/admin/settings",
-        icon:<SettingOutlined />,
-        label: t("Cài đặt"),
-        
-    }
+    
 ]
     return menuItems;
 
