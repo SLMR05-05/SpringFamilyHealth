@@ -24,6 +24,11 @@ public class HealthRecordService {
     @Transactional(readOnly = true)
     public HealthRecord findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("HealthRecord not found: " + id)); }
 
+    @Transactional(readOnly = true)
+    public HealthRecord findByMemberId(Integer memberId) {
+        return repo.findByMemberMemberId(memberId).orElseThrow(() -> new NotFoundException("Health record not found for member: " + memberId));
+    }
+
     @Transactional
     public HealthRecord create(HealthRecord entity) { return repo.save(entity); }
 

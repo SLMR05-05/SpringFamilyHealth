@@ -4,6 +4,7 @@ import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.dto.user.UserCreateRequest;
 import com.example.backend.dto.user.UserUpdateRequest;
+import com.example.backend.dto.user.PasswordChangeRequest;
 import com.example.backend.entity.Member;
 import com.example.backend.entity.User;
 import com.example.backend.repository.MemberRepository;
@@ -83,6 +84,45 @@ public class UserController {
         return ApiResponse.<Void>builder().build();
     }
 
+    @PatchMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<UserResponse> updateMyProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody Map<String, Object> updates) {
+        // Get userId from JWT
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("UserId not found in token");
+        }
+        Integer userId = ((Number) userIdClaim).intValue();
+        
+        // Get current user
+        User user = userService.findById(userId);
+        
+        // Only allow updating specific fields (not role or password)
+        if (updates.containsKey("name")) {
+            user.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("phone")) {
+            user.setPhone((String) updates.get("phone"));
+        }
+        if (updates.containsKey("email")) {
+            user.setEmail((String) updates.get("email"));
+        }
+        
+        // Create update request
+        UserUpdateRequest req = new UserUpdateRequest();
+        req.setName(user.getName());
+        req.setPhone(user.getPhone());
+        req.setEmail(user.getEmail());
+        req.setRole(user.getRole());
+        
+        User updated = userService.update(userId, req);
+        return ApiResponse.<UserResponse>builder()
+                .result(toResponse(updated))
+                .build();
+    }
+
     @GetMapping("/me/family")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<Map<String, Object>> getMyFamily(@AuthenticationPrincipal Jwt jwt) {
@@ -113,6 +153,25 @@ public class UserController {
         return ApiResponse.<Map<String, Object>>builder()
                 .result(result)
                 .build();
+    }
+
+    @PatchMapping("/me/password")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<Void> changeMyPassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody PasswordChangeRequest req) {
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UserId not found in token");
+        }
+        Integer userId = ((Number) userIdClaim).intValue();
+
+        try {
+            userService.changePassword(userId, req.getCurrentPassword(), req.getNewPassword());
+            return ApiResponse.<Void>builder().build();
+        } catch (IllegalArgumentException ex) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 
     private UserResponse toResponse(User u) {

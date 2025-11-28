@@ -13,6 +13,23 @@ const prescriptionApi = {
     return axiosClient.get(`/prescriptions/${id}`);
   },
 
+  // Get detailed prescription by ID (includes medications)
+  getDetailById(id) {
+    return axiosClient.get(`/prescriptions/${id}/detail`);
+  },
+
+  // Get all prescriptions for a member (includes detailed info)
+  getByMemberId(memberId) {
+    return axiosClient.get(`/prescriptions/member/${memberId}`);
+  },
+
+  // Update prescription status
+  updateStatus(id, status) {
+    return axiosClient.put(`/prescriptions/${id}/status`, null, {
+      params: { status }
+    });
+  },
+
   // Create new prescription
   create(data) {
     return axiosClient.post("/prescriptions", data);

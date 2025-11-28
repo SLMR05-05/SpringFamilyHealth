@@ -1,6 +1,7 @@
 package com.example.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "prescription")
@@ -15,11 +16,21 @@ public class Prescription {
     private Member member;
 
     @ManyToOne
-    @JoinColumn(name = "visit_id")
-    private VisitHistory visit;
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
+
+    @ManyToOne
+    @JoinColumn(name = "doctor_id")
+    private Doctor doctor;
 
     @Column(name = "note", columnDefinition = "text")
     private String note;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "prescribed_at")
+    private LocalDateTime prescribedAt;
 
     public Prescription() {}
 
@@ -27,8 +38,14 @@ public class Prescription {
     public void setPrescriptionId(Integer prescriptionId) { this.prescriptionId = prescriptionId; }
     public Member getMember() { return member; }
     public void setMember(Member member) { this.member = member; }
-    public VisitHistory getVisit() { return visit; }
-    public void setVisit(VisitHistory visit) { this.visit = visit; }
+    public Appointment getAppointment() { return appointment; }
+    public void setAppointment(Appointment appointment) { this.appointment = appointment; }
+    public Doctor getDoctor() { return doctor; }
+    public void setDoctor(Doctor doctor) { this.doctor = doctor; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public LocalDateTime getPrescribedAt() { return prescribedAt; }
+    public void setPrescribedAt(LocalDateTime prescribedAt) { this.prescribedAt = prescribedAt; }
 }

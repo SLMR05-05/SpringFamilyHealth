@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
 import { X, Copy, Check, RefreshCw, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -18,16 +19,6 @@ export function AddMemberModal({ isOpen, onClose }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleRegenerate = () => {
-    setIsRegenerating(true);
-    // Giả lập call API tạo mã mới
-    setTimeout(() => {
-      const randomCode = 'FAMILY-' + Math.floor(1000 + Math.random() * 9000);
-      setInviteCode(randomCode);
-      setIsRegenerating(false);
-      setCopied(false);
-    }, 800);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-60 p-4 backdrop-blur-sm transition-opacity">

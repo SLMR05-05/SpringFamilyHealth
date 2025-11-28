@@ -4,5 +4,9 @@ import com.example.backend.entity.PrescriptionMedication;
 import com.example.backend.entity.PrescriptionMedicationId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PrescriptionMedicationRepository extends JpaRepository<PrescriptionMedication, PrescriptionMedicationId> {}
+import java.util.List;
+
+public interface PrescriptionMedicationRepository extends JpaRepository<PrescriptionMedication, PrescriptionMedicationId> {
+    List<PrescriptionMedication> findByPrescriptionPrescriptionId(Integer prescriptionId);
+}
 

@@ -1,6 +1,15 @@
 import axiosClient from "./axiosClient";
 
 const userApi = {
+  // Get current user profile
+  getMe() {
+    return axiosClient.get("/users/me");
+  },
+
+  // Update current user's profile
+  updateMe(data) {
+    return axiosClient.patch("/users/me", data);
+  },
   // Get all users with pagination
   getAll(page = 0, size = 10) {
     return axiosClient.get("/users", {
@@ -31,6 +40,11 @@ const userApi = {
   // Get current user's family
   getMyFamily() {
     return axiosClient.get("/users/me/family");
+  },
+
+  // Change current user's password
+  changePassword(data) {
+    return axiosClient.patch('/users/me/password', data);
   },
 };
 

@@ -36,6 +36,11 @@ const appointmentApi = {
     return axiosClient.put(`/appointments/${appointmentId}`, data);
   },
 
+  // Get appointment by ID
+  getById(appointmentId) {
+    return axiosClient.get(`/appointments/${appointmentId}`);
+  },
+
   // Update appointment status
   updateStatus(appointmentId, status) {
     return axiosClient.put(`/appointments/${appointmentId}/status`, null, {

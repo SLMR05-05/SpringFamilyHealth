@@ -7,6 +7,8 @@ import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.entity.Appointment;
 import com.example.backend.entity.Doctor;
 import com.example.backend.entity.Member;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.example.backend.service.AppointmentService;
 import com.example.backend.service.DoctorService;
 import com.example.backend.service.MemberService;
@@ -105,8 +107,27 @@ public class AppointmentController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<AppointmentResponse> create(@Valid @RequestBody AppointmentCreateRequest req) {
-        Doctor doctor = doctorService.findById(req.getDoctorId());
-        Member member = memberService.findById(req.getMemberId());
+        // Find member and eager-load family (use findByUserId which LEFT JOIN FETCH family)
+        Member member;
+        try {
+            member = memberService.findByUserId(req.getMemberId());
+        } catch (com.example.backend.service.NotFoundException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Member not found: " + req.getMemberId());
+        }
+
+        // Resolve doctor: prefer provided doctorId; otherwise use family's assigned doctor
+        Doctor doctor = null;
+        if (req.getDoctorId() != null) {
+            try {
+                doctor = doctorService.findById(req.getDoctorId());
+            } catch (com.example.backend.service.NotFoundException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor not found: " + req.getDoctorId());
+            }
+        } else if (member != null && member.getFamily() != null && member.getFamily().getDoctor() != null) {
+            doctor = member.getFamily().getDoctor();
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor ID is required or the member's family must have an assigned doctor");
+        }
 
         Appointment appointment = new Appointment();
         appointment.setDoctor(doctor);
@@ -126,7 +147,7 @@ public class AppointmentController {
      * Update appointment
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','USER')")
     public ApiResponse<AppointmentResponse> update(
             @PathVariable Integer id,
             @Valid @RequestBody AppointmentUpdateRequest req) {
@@ -155,7 +176,7 @@ public class AppointmentController {
      * Update appointment status
      */
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','USER')")
     public ApiResponse<AppointmentResponse> updateStatus(
             @PathVariable Integer id,
             @RequestParam String status) {
@@ -169,7 +190,7 @@ public class AppointmentController {
      * Delete appointment
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','USER')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         appointmentService.delete(id);
         return ApiResponse.<Void>builder()

@@ -13,9 +13,19 @@ const healthRecordApi = {
     return axiosClient.get(`/health-records/${id}`);
   },
 
+  // Get health record by member ID
+  getByMemberId(memberId) {
+    return axiosClient.get(`/health-records/member/${memberId}`);
+  },
+
   // Create new health record
   create(data) {
     return axiosClient.post("/health-records", data);
+  },
+
+  // Create health record for authenticated user's member
+  createForMe(data) {
+    return axiosClient.post("/health-records/me", data);
   },
 
   // Update health record

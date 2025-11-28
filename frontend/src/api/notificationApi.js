@@ -1,40 +1,33 @@
-import axiosClient from "./axiosClient";
+/* eslint-disable no-unused-vars */
+import axiosClient from './axiosClient';
 
 const notificationApi = {
-  // Get all notifications for a user
-  getByUserId(userId) {
-    return axiosClient.get(`/notifications/user/${userId}`);
+  // Get paged notifications for current user
+  get(page = 0, size = 20) {
+    return axiosClient.get('/notifications', { params: { page, size } });
   },
 
-  // Get unread notifications for current user
+  // Get unread notifications list
   getUnread() {
-    return axiosClient.get("/notifications/unread");
+    return axiosClient.get('/notifications/unread');
   },
 
-  // Get unread count for current user
+  // Get unread count for badge
   getUnreadCount() {
-    return axiosClient.get("/notifications/unread/count");
+    return axiosClient.get('/notifications/unread/count');
   },
 
-  // Mark notification as read
-  markAsRead(notificationId) {
-    return axiosClient.put(`/notifications/${notificationId}/read`);
+  // Mark single notification as read
+  markRead(id) {
+    return axiosClient.put(`/notifications/${id}/read`);
   },
 
-  // Mark all as read for current user
-  markAllAsRead() {
-    return axiosClient.put("/notifications/read-all");
-  },
-
-  // Create notification (ADMIN only)
-  create(data) {
-    return axiosClient.post("/notifications", data);
-  },
-
-  // Delete notification
-  remove(notificationId) {
-    return axiosClient.delete(`/notifications/${notificationId}`);
-  },
+  // Mark all notifications as read
+  markAllRead() {
+    return axiosClient.put('/notifications/read-all');
+  }
 };
 
 export default notificationApi;
+
+

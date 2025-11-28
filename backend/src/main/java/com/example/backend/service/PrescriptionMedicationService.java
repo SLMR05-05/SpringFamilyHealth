@@ -25,6 +25,11 @@ public class PrescriptionMedicationService {
     @Transactional(readOnly = true)
     public PrescriptionMedication findById(PrescriptionMedicationId id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("PrescriptionMedication not found")); }
 
+    @Transactional(readOnly = true)
+    public List<PrescriptionMedication> findByPrescriptionId(Integer prescriptionId) { 
+        return repo.findByPrescriptionPrescriptionId(prescriptionId); 
+    }
+
     @Transactional
     public PrescriptionMedication create(PrescriptionMedication entity) { return repo.save(entity); }
 

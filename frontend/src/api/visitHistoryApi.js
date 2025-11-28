@@ -13,6 +13,11 @@ const visitHistoryApi = {
     return axiosClient.get(`/visit-histories/${id}`);
   },
 
+  // Get visit history by member ID
+  getByMemberId(memberId) {
+    return axiosClient.get(`/visit-histories/member/${memberId}`);
+  },
+
   // Create new visit history
   create(data) {
     return axiosClient.post("/visit-histories", data);

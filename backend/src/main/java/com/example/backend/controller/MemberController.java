@@ -90,6 +90,41 @@ public class MemberController {
         return ApiResponse.<Void>builder().build();
     }
 
+    @PatchMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<MemberResponse> updateMyHealthMetrics(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt,
+            @RequestBody java.util.Map<String, Object> updates) {
+        // Get userId from JWT
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("UserId not found in token");
+        }
+        Integer userId = ((Number) userIdClaim).intValue();
+        
+        // Find member by userId
+        Member member = service.findByUserId(userId);
+        
+        // Only allow updating specific health-related fields
+        if (updates.containsKey("weight")) {
+            Object weightObj = updates.get("weight");
+            if (weightObj != null) {
+                member.setWeight(((Number) weightObj).floatValue());
+            }
+        }
+        if (updates.containsKey("height")) {
+            Object heightObj = updates.get("height");
+            if (heightObj != null) {
+                member.setHeight(((Number) heightObj).floatValue());
+            }
+        }
+        
+        Member updated = service.update(member.getMemberId(), member);
+        return ApiResponse.<MemberResponse>builder()
+                .result(toResponse(updated))
+                .build();
+    }
+
     private MemberResponse toResponse(Member m) {
         MemberResponse res = new MemberResponse();
         res.setMemberId(m.getMemberId());

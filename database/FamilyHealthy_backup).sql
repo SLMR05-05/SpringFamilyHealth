@@ -50,17 +50,17 @@ CREATE TABLE `appointment` (
   `member_id` int NOT NULL,
   `doctor_id` int NOT NULL,
   `appointment_date` datetime NOT NULL COMMENT 'Ngày giờ hẹn',
-  `status` varchar(50) DEFAULT 'SCHEDULED' COMMENT 'SCHEDULED, COMPLETED, CANCELLED, NO_SHOW',
+  `status` varchar(50) DEFAULT 'SCHEDULED' COMMENT 'SCHEDULED, COMPLETED, CANCELLED, NO_SHOW, CONFIRMED',
   `reason` text COMMENT 'Lý do khám',
   `notes` text COMMENT 'Ghi chú',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`appointment_id`),
-  KEY `member_id` (`member_id`),
   KEY `doctor_id` (`doctor_id`),
-  CONSTRAINT `appointment_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
+  KEY `appointment_ibfk_1` (`member_id`),
+  CONSTRAINT `appointment_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `appointment_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`doctor_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Quản lý lịch hẹn khám bệnh';
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Quản lý lịch hẹn khám bệnh';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +69,7 @@ CREATE TABLE `appointment` (
 
 LOCK TABLES `appointment` WRITE;
 /*!40000 ALTER TABLE `appointment` DISABLE KEYS */;
-INSERT INTO `appointment` VALUES (1,4,5,'2025-12-01 09:00:00','SCHEDULED','Tái khám huyết áp','Mang theo kết quả xét nghiệm','2025-11-26 15:40:53','2025-11-26 15:40:53'),(2,5,5,'2025-12-05 10:30:00','SCHEDULED','Khám thai định kỳ','Siêu âm thai','2025-11-26 15:40:53','2025-11-26 15:40:53'),(3,6,5,'2025-11-25 14:00:00','COMPLETED','Khám ho, sốt','Đã khám xong','2025-11-26 15:40:53','2025-11-26 15:40:53'),(4,9,6,'2025-11-28 15:00:00','SCHEDULED','Tái khám dạ dày','Nội soi dạ dày','2025-11-26 15:40:53','2025-11-26 15:40:53');
+INSERT INTO `appointment` VALUES (1,12,5,'2025-12-01 09:00:00','COMPLETED','Tái khám huyết áp','Mang theo kết quả xét nghiệm','2025-11-26 15:40:53','2025-11-28 05:14:39'),(2,3,5,'2025-12-05 10:30:00','COMPLETED','Khám thai định kỳ','Siêu âm thai','2025-11-26 15:40:53','2025-11-28 05:15:01'),(3,8,5,'2025-11-25 14:00:00','COMPLETED','Khám ho, sốt','Đã khám xong','2025-11-26 15:40:53','2025-11-27 09:12:14'),(4,9,6,'2025-11-28 15:00:00','COMPLETED','Tái khám dạ dày','Nội soi dạ dày','2025-11-26 15:40:53','2025-11-28 05:15:10'),(12,11,5,'2025-11-01 09:00:00','COMPLETED','Đau đầu, chóng mặt','Huyết áp cao','2025-11-28 07:15:26','2025-11-28 07:15:26'),(13,13,5,'2025-11-05 09:00:00','COMPLETED','Khám thai định kỳ','Thai kỳ bình thường','2025-11-28 07:15:26','2025-11-28 07:15:26'),(14,3,5,'2025-11-10 09:00:00','COMPLETED','Ho, sốt nhẹ','Viêm đường hô hấp trên','2025-11-28 07:15:26','2025-11-28 07:15:26'),(15,7,5,'2025-11-08 09:00:00','COMPLETED','Đau lưng','Thoái hóa cột sống','2025-11-28 07:15:26','2025-11-28 07:15:26'),(16,9,6,'2025-11-15 09:00:00','COMPLETED','Đau dạ dày','Viêm loét dạ dày','2025-11-28 07:15:26','2025-11-28 07:15:26');
 /*!40000 ALTER TABLE `appointment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,8 +175,8 @@ CREATE TABLE `health_record` (
   `allergies` text,
   `chronic_conditions` text,
   PRIMARY KEY (`record_id`),
-  KEY `member_id` (`member_id`),
-  CONSTRAINT `health_record_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`)
+  KEY `health_record_ibfk_1` (`member_id`),
+  CONSTRAINT `health_record_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -186,7 +186,7 @@ CREATE TABLE `health_record` (
 
 LOCK TABLES `health_record` WRITE;
 /*!40000 ALTER TABLE `health_record` DISABLE KEYS */;
-INSERT INTO `health_record` VALUES (1,4,'O+','Không','Tăng huyết áp'),(2,5,'A+','Hải sản','Không'),(3,6,'O+','Không','Hen suyễn nhẹ'),(4,7,'B+','Penicillin','Thoái hóa cột sống'),(5,8,'AB+','Không','Không'),(6,9,'A+','Không','Viêm loét dạ dày'),(7,10,'O+','Không','Không'),(8,3,'A+','Không','Không');
+INSERT INTO `health_record` VALUES (1,11,'O+','Không','Tăng huyết áp'),(2,13,'A+','Hải sản','Không'),(3,3,'O+','Không','Hen suyễn nhẹ'),(4,7,'B+','Penicillin','Thoái hóa cột sống'),(5,8,'AB+','Không','Không'),(6,9,'A+','Không','Viêm loét dạ dày'),(7,10,'O+','Không','Không'),(8,12,'A+','Không','Không');
 /*!40000 ALTER TABLE `health_record` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -300,7 +300,7 @@ CREATE TABLE `member` (
 
 LOCK TABLES `member` WRITE;
 /*!40000 ALTER TABLE `member` DISABLE KEYS */;
-INSERT INTO `member` VALUES (3,1,30,'1995-06-15','MALE',70,172,'Con trai','MEMBER',NULL,NULL,NULL),(4,1,38,'1987-03-15','MALE',72.5,175,'Chồng','HEAD',NULL,NULL,NULL),(5,1,36,'1989-07-20','FEMALE',58,165,'Vợ','MEMBER',NULL,NULL,NULL),(6,1,10,'2015-11-05','MALE',32,140,'Con trai','MEMBER',NULL,NULL,NULL),(7,2,42,'1983-05-10','MALE',78,172,'Chồng','HEAD',NULL,NULL,NULL),(8,2,40,'1985-08-25','FEMALE',62,160,'Vợ','MEMBER',NULL,NULL,NULL),(9,3,35,'1990-01-12','MALE',68.5,170,'Chồng','HEAD',NULL,NULL,NULL),(10,3,33,'1992-04-18','FEMALE',55,158,'Vợ','MEMBER',NULL,NULL,NULL);
+INSERT INTO `member` VALUES (3,1,10,'2015-11-05','MALE',32,140,'Con trai','MEMBER',NULL,NULL,NULL),(7,2,42,'1983-05-10','MALE',78,172,'Chồng','HEAD',NULL,NULL,NULL),(8,2,40,'1985-08-25','FEMALE',62,160,'Vợ','MEMBER',NULL,NULL,NULL),(9,3,35,'1990-01-12','MALE',68.5,170,'Chồng','HEAD',NULL,NULL,NULL),(10,3,33,'1992-04-18','FEMALE',55,158,'Vợ','MEMBER',NULL,NULL,NULL),(11,1,38,'1987-03-15','MALE',72.5,175,'Chồng','HEAD',NULL,NULL,NULL),(12,1,30,'1995-06-15','MALE',70,172,'Con trai','MEMBER',NULL,NULL,NULL),(13,1,36,'1989-07-20','FEMALE',58,165,'Vợ','MEMBER',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `member` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -345,14 +345,22 @@ DROP TABLE IF EXISTS `prescription`;
 CREATE TABLE `prescription` (
   `prescription_id` int NOT NULL AUTO_INCREMENT,
   `member_id` int DEFAULT NULL,
+  `appointment_id` int DEFAULT NULL,
+  `doctor_id` int DEFAULT NULL,
   `visit_id` int DEFAULT NULL,
   `note` text,
+  `status` varchar(50) DEFAULT 'ACTIVE' COMMENT 'ACTIVE, COMPLETED, EXPIRED',
+  `prescribed_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`prescription_id`),
-  KEY `member_id` (`member_id`),
   KEY `visit_id` (`visit_id`),
-  CONSTRAINT `prescription_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
+  KEY `prescription_ibfk_1` (`member_id`),
+  KEY `prescription_appointment_fk` (`appointment_id`),
+  KEY `prescription_doctor_fk` (`doctor_id`),
+  CONSTRAINT `prescription_appointment_fk` FOREIGN KEY (`appointment_id`) REFERENCES `appointment` (`appointment_id`),
+  CONSTRAINT `prescription_doctor_fk` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`doctor_id`),
+  CONSTRAINT `prescription_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `prescription_ibfk_2` FOREIGN KEY (`visit_id`) REFERENCES `visit_history` (`visit_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -361,7 +369,7 @@ CREATE TABLE `prescription` (
 
 LOCK TABLES `prescription` WRITE;
 /*!40000 ALTER TABLE `prescription` DISABLE KEYS */;
-INSERT INTO `prescription` VALUES (1,4,1,'Uống thuốc hạ huyết áp đều đặn, ăn nhạt, tập thể dục nhẹ.'),(2,5,2,'Bổ sung vitamin cho bà bầu, nghỉ ngơi đầy đủ.'),(3,6,3,'Uống thuốc hạ sốt, giữ ấm, uống nhiều nước.'),(4,7,4,'Thuốc giảm đau, vật lý trị liệu.'),(5,9,6,'Thuốc bảo vệ dạ dày, ăn đúng giờ, tránh thức ăn cay nóng.'),(6,9,13,'Đơn thuốc gồm 1 loại: t'),(7,9,14,'Đơn thuốc gồm 1 loại: Vitamin C');
+INSERT INTO `prescription` VALUES (1,11,12,5,1,'Uống thuốc hạ huyết áp đều đặn, ăn nhạt, tập thể dục nhẹ.','ACTIVE','2025-11-01 10:00:00'),(2,13,13,5,2,'Bổ sung vitamin cho bà bầu, nghỉ ngơi đầy đủ.','ACTIVE','2025-11-05 10:00:00'),(3,3,14,5,3,'Uống thuốc hạ sốt, giữ ấm, uống nhiều nước.','ACTIVE','2025-11-10 10:00:00'),(4,7,15,5,4,'Thuốc giảm đau, vật lý trị liệu.','ACTIVE','2025-11-08 10:00:00'),(5,9,16,6,6,'Thuốc bảo vệ dạ dày, ăn đúng giờ, tránh thức ăn cay nóng.','ACTIVE','2025-11-15 10:00:00'),(6,9,NULL,NULL,13,'Đơn thuốc gồm 1 loại: t','ACTIVE','2025-11-28 07:07:43'),(7,9,NULL,NULL,14,'Đơn thuốc gồm 1 loại: Vitamin C','ACTIVE','2025-11-28 07:07:43'),(16,3,1,5,NULL,'Thuốc hạ huyết áp - Tái khám','ACTIVE','2025-12-01 10:00:00'),(17,7,2,5,NULL,'Vitamin cho bà bầu - Khám định kỳ','ACTIVE','2025-12-05 11:30:00'),(18,8,3,5,NULL,'Thuốc cảm cúm - Đã khám xong','COMPLETED','2025-11-25 15:00:00'),(19,9,4,6,NULL,'Thuốc dạ dày - Sắp tái khám','ACTIVE','2025-11-28 16:00:00');
 /*!40000 ALTER TABLE `prescription` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -390,7 +398,7 @@ CREATE TABLE `prescription_medication` (
 
 LOCK TABLES `prescription_medication` WRITE;
 /*!40000 ALTER TABLE `prescription_medication` DISABLE KEYS */;
-INSERT INTO `prescription_medication` VALUES (1,6,'1 viên/ngày','30 ngày'),(2,5,'1 viên/ngày','90 ngày'),(3,1,'1 viên khi sốt (tối đa 4 viên/ngày)','5 ngày'),(3,3,'1 viên x 3 lần/ngày sau ăn','7 ngày'),(4,2,'1 viên x 2 lần/ngày sau ăn','10 ngày'),(4,8,'1 viên x 2 lần/ngày','60 ngày'),(5,7,'1 viên/ngày trước ăn sáng','30 ngày'),(6,9,'20mg','Twice a day'),(7,10,'40mg','Four times a day');
+INSERT INTO `prescription_medication` VALUES (1,6,'1 viên/ngày','30 ngày'),(2,5,'1 viên/ngày','90 ngày'),(3,1,'1 viên khi sốt (tối đa 4 viên/ngày)','5 ngày'),(3,3,'1 viên x 3 lần/ngày sau ăn','7 ngày'),(4,2,'1 viên x 2 lần/ngày sau ăn','10 ngày'),(4,4,'1 viên/ngày','30 ngày'),(4,6,'1 viên/ngày sau ăn sáng','30 ngày'),(4,8,'1 viên x 2 lần/ngày','60 ngày'),(5,4,'2 viên/ngày','60 ngày'),(5,5,'1 viên/ngày','60 ngày'),(5,7,'1 viên/ngày trước ăn sáng','30 ngày'),(6,1,'1 viên khi sốt','5 ngày'),(6,3,'1 viên x 2 lần/ngày','7 ngày'),(7,7,'1 viên/ngày trước ăn','14 ngày');
 /*!40000 ALTER TABLE `prescription_medication` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -439,8 +447,8 @@ CREATE TABLE `vaccination` (
   `vaccine_name` varchar(255) DEFAULT NULL,
   `date_given` date DEFAULT NULL,
   PRIMARY KEY (`vaccine_id`),
-  KEY `member_id` (`member_id`),
-  CONSTRAINT `vaccination_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`)
+  KEY `vaccination_ibfk_1` (`member_id`),
+  CONSTRAINT `vaccination_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -450,7 +458,7 @@ CREATE TABLE `vaccination` (
 
 LOCK TABLES `vaccination` WRITE;
 /*!40000 ALTER TABLE `vaccination` DISABLE KEYS */;
-INSERT INTO `vaccination` VALUES (1,6,'Vắc-xin sởi-quai bị-rubella (MMR)','2024-05-10'),(2,6,'Vắc-xin viêm gan B','2024-08-15'),(3,6,'Vắc-xin COVID-19 (Pfizer)','2025-01-20');
+INSERT INTO `vaccination` VALUES (1,3,'Vắc-xin sởi-quai bị-rubella (MMR)','2024-05-10'),(2,3,'Vắc-xin viêm gan B','2024-08-15'),(3,3,'Vắc-xin COVID-19 (Pfizer)','2025-01-20');
 /*!40000 ALTER TABLE `vaccination` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -470,9 +478,9 @@ CREATE TABLE `visit_history` (
   `follow_up_date` date DEFAULT NULL,
   `doctor_id` int DEFAULT NULL COMMENT 'Bác sĩ thực hiện khám',
   PRIMARY KEY (`visit_id`),
-  KEY `member_id` (`member_id`),
   KEY `doctor_id` (`doctor_id`),
-  CONSTRAINT `visit_history_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
+  KEY `visit_history_ibfk_1` (`member_id`),
+  CONSTRAINT `visit_history_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `visit_history_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`doctor_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -483,7 +491,7 @@ CREATE TABLE `visit_history` (
 
 LOCK TABLES `visit_history` WRITE;
 /*!40000 ALTER TABLE `visit_history` DISABLE KEYS */;
-INSERT INTO `visit_history` VALUES (1,4,'2025-11-01','Đau đầu, chóng mặt','Huyết áp cao','2025-12-01',5),(2,5,'2025-11-05','Khám thai định kỳ','Thai kỳ bình thường','2025-12-05',5),(3,6,'2025-11-10','Ho, sốt nhẹ','Viêm đường hô hấp trên','2025-11-17',5),(4,7,'2025-11-08','Đau lưng','Thoái hóa cột sống','2025-12-08',5),(5,8,'2025-11-12','Kiểm tra sức khỏe định kỳ','Bình thường',NULL,5),(6,9,'2025-11-15','Đau dạ dày','Viêm loét dạ dày','2025-11-22',6),(7,10,'2025-11-18','Khám tổng quát','Bình thường',NULL,6),(8,9,'2025-11-27','te','te\n\nĐiều trị: te\n\nGhi chú: te',NULL,NULL),(9,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(10,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(11,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(12,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(13,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(14,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(15,4,'2025-11-27','t','t\n\nĐiều trị: t\n\nGhi chú: t',NULL,NULL);
+INSERT INTO `visit_history` VALUES (1,11,'2025-11-01','Đau đầu, chóng mặt','Huyết áp cao','2025-12-01',5),(2,13,'2025-11-05','Khám thai định kỳ','Thai kỳ bình thường','2025-12-05',5),(3,3,'2025-11-10','Ho, sốt nhẹ','Viêm đường hô hấp trên','2025-11-17',5),(4,7,'2025-11-08','Đau lưng','Thoái hóa cột sống','2025-12-08',5),(5,8,'2025-11-12','Kiểm tra sức khỏe định kỳ','Bình thường',NULL,5),(6,9,'2025-11-15','Đau dạ dày','Viêm loét dạ dày','2025-11-22',6),(7,10,'2025-11-18','Khám tổng quát','Bình thường',NULL,6),(8,9,'2025-11-27','te','te\n\nĐiều trị: te\n\nGhi chú: te',NULL,NULL),(9,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(10,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(11,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(12,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(13,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(14,9,'2025-11-26','Kê đơn thuốc - 1 loại thuốc','t\n\nĐiều trị: t',NULL,NULL),(15,11,'2025-11-27','t','t\n\nĐiều trị: t\n\nGhi chú: t',NULL,NULL);
 /*!40000 ALTER TABLE `visit_history` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -496,4 +504,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-27 15:40:21
+-- Dump completed on 2025-11-28 15:20:49

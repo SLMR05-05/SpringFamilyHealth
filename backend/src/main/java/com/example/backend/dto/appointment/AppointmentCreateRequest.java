@@ -16,7 +16,7 @@ public class AppointmentCreateRequest {
     @NotNull(message = "Member ID is required")
     private Integer memberId;
 
-    @NotNull(message = "Doctor ID is required")
+    // doctorId is optional. If not provided, controller will derive doctor from member's family
     private Integer doctorId;
 
     @NotNull(message = "Appointment date is required")

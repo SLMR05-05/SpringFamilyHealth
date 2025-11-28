@@ -24,6 +24,9 @@ public class MemberService {
     @Transactional(readOnly = true)
     public Member findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("Member not found: " + id)); }
 
+    @Transactional(readOnly = true)
+    public Member findByUserId(Integer userId) { return repo.findByUserId(userId).orElseThrow(() -> new NotFoundException("Member not found for user: " + userId)); }
+
     @Transactional
     public Member create(Member entity) { return repo.save(entity); }
 

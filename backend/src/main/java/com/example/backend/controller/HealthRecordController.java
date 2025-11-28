@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.healthrecord.HealthRecordCreateRequest;
+import com.example.backend.dto.healthrecord.HealthRecordCreateForMeRequest;
 import com.example.backend.dto.healthrecord.HealthRecordUpdateRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.HealthRecordResponse;
@@ -36,11 +37,50 @@ public class HealthRecordController {
                 .build();
     }
 
+    @GetMapping("/member/{memberId}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<HealthRecordResponse> getByMemberId(@PathVariable Integer memberId) {
+        try {
+            HealthRecord hr = service.findByMemberId(memberId);
+            return ApiResponse.<HealthRecordResponse>builder()
+                    .result(toResponse(hr))
+                    .build();
+        } catch (com.example.backend.service.NotFoundException ex) {
+            // Return success with null result so frontend can treat as "no record"
+            return ApiResponse.<HealthRecordResponse>builder().result(null).build();
+        }
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<HealthRecordResponse> create(@RequestBody @jakarta.validation.Valid HealthRecordCreateRequest request) {
         HealthRecord entity = new HealthRecord();
         entity.setMember(memberService.findById(request.getMemberId()));
+        entity.setBloodType(request.getBloodType());
+        entity.setAllergies(request.getAllergies());
+        entity.setChronicConditions(request.getChronicConditions());
+        HealthRecord created = service.create(entity);
+        return ApiResponse.<HealthRecordResponse>builder()
+                .result(toResponse(created))
+                .build();
+    }
+
+    @PostMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<HealthRecordResponse> createForMe(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt,
+            @RequestBody @jakarta.validation.Valid HealthRecordCreateForMeRequest request) {
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("UserId not found in token");
+        }
+        Integer userId = ((Number) userIdClaim).intValue();
+
+        // Find member for this user
+        com.example.backend.entity.Member member = memberService.findByUserId(userId);
+
+        HealthRecord entity = new HealthRecord();
+        entity.setMember(member);
         entity.setBloodType(request.getBloodType());
         entity.setAllergies(request.getAllergies());
         entity.setChronicConditions(request.getChronicConditions());

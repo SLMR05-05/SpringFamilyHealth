@@ -24,6 +24,20 @@ public class PrescriptionService {
     @Transactional(readOnly = true)
     public Prescription findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("Prescription not found: " + id)); }
 
+    @Transactional(readOnly = true)
+    public Prescription findByIdWithDetails(Integer id) { 
+        Prescription prescription = repo.findByIdWithDetails(id);
+        if (prescription == null) {
+            throw new NotFoundException("Prescription not found: " + id);
+        }
+        return prescription;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Prescription> findByMemberId(Integer memberId) {
+        return repo.findByMemberMemberId(memberId);
+    }
+
     @Transactional
     public Prescription create(Prescription entity) { return repo.save(entity); }
 
@@ -31,8 +45,11 @@ public class PrescriptionService {
     public Prescription update(Integer id, Prescription payload) {
         Prescription existing = findById(id);
         existing.setMember(payload.getMember());
-        existing.setVisit(payload.getVisit());
+        existing.setAppointment(payload.getAppointment());
+        existing.setDoctor(payload.getDoctor());
         existing.setNote(payload.getNote());
+        existing.setStatus(payload.getStatus());
+        existing.setPrescribedAt(payload.getPrescribedAt());
         return repo.save(existing);
     }
 

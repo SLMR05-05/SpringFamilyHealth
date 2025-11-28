@@ -6,15 +6,20 @@ import jakarta.validation.constraints.Size;
 public class PrescriptionUpdateRequest {
     @NotNull
     private Integer memberId;
-    @NotNull
-    private Integer visitId;
+    private Integer appointmentId;
+    private Integer doctorId;
     @Size(max = 2000)
     private String note;
+    private String status; // ACTIVE, COMPLETED
 
     public Integer getMemberId() { return memberId; }
     public void setMemberId(Integer memberId) { this.memberId = memberId; }
-    public Integer getVisitId() { return visitId; }
-    public void setVisitId(Integer visitId) { this.visitId = visitId; }
+    public Integer getAppointmentId() { return appointmentId; }
+    public void setAppointmentId(Integer appointmentId) { this.appointmentId = appointmentId; }
+    public Integer getDoctorId() { return doctorId; }
+    public void setDoctorId(Integer doctorId) { this.doctorId = doctorId; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

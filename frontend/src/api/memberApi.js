@@ -27,6 +27,11 @@ const memberApi = {
   remove(id) {
     return axiosClient.delete(`/members/${id}`);
   },
+
+  // Update current user's health metrics (weight, height)
+  updateMe(data) {
+    return axiosClient.patch("/members/me", data);
+  },
 };
 
 export default memberApi;

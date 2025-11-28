@@ -23,6 +23,18 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
+    public void changePassword(Integer userId, String currentPlain, String newPlain) {
+        User existing = findById(userId);
+        // Verify current password
+        if (existing.getPasswordHash() == null || !passwordEncoder.matches(currentPlain, existing.getPasswordHash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        // Set new encoded password
+        existing.setPasswordHash(passwordEncoder.encode(newPlain));
+        userRepository.save(existing);
+    }
+
     @Transactional(readOnly = true)
     public List<User> findAll() {
         return userRepository.findAll();

@@ -6,15 +6,17 @@ import jakarta.validation.constraints.Size;
 public class PrescriptionCreateRequest {
     @NotNull
     private Integer memberId;
-    @NotNull
-    private Integer visitId;
+    private Integer appointmentId; // Optional, có thể tạo đơn thuốc mà không cần appointment
+    private Integer doctorId; // Optional
     @Size(max = 2000)
     private String note;
 
     public Integer getMemberId() { return memberId; }
     public void setMemberId(Integer memberId) { this.memberId = memberId; }
-    public Integer getVisitId() { return visitId; }
-    public void setVisitId(Integer visitId) { this.visitId = visitId; }
+    public Integer getAppointmentId() { return appointmentId; }
+    public void setAppointmentId(Integer appointmentId) { this.appointmentId = appointmentId; }
+    public Integer getDoctorId() { return doctorId; }
+    public void setDoctorId(Integer doctorId) { this.doctorId = doctorId; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
 }
