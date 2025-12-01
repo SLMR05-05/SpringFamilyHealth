@@ -95,16 +95,6 @@ const AddDoctorModal = ({ open, onCancel, onFinish }) => {
         </Form.Item>
 
         <Form.Item
-          name="phone"
-          label="Số điện thoại"
-          rules={[
-            { required: false },
-          ]}
-        >
-          <Input prefix={<UserOutlined />} placeholder="Ví dụ: 0909123456" />
-        </Form.Item>
-
-        <Form.Item
           name="certificate_number"
           label="Mã số chứng chỉ"
           rules={[

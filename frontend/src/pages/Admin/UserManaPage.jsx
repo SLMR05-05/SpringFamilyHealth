@@ -1,4 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
 import {
   Button,
   Card,
@@ -10,8 +9,7 @@ import {
   Modal,
   message,
 } from "antd";
-import React, { useState, useMemo, useEffect } from "react";
-import { userApi } from "../../api";
+import React, { useState, useMemo } from "react";
 import {
   PlusOutlined,
   SearchOutlined,
@@ -29,21 +27,94 @@ import UserDetailModal from "../../components/modalAdmin/UserDetailModal";
 
 const { Title, Text } = Typography;
 
+// Sửa lỗi cú pháp email trong dữ liệu mẫu
+const ALL_USERS_DATA_INITIAL = [
+  {
+    key: 1,
+    name: "Nguyễn Văn A",
+    email: "nguyenvana@email.com",
+    status: "Kích hoạt",
+    date: "25/10/2023",
+  },
+  {
+    key: 2,
+    name: "Trần Thị B",
+    email: "tranthib@email.com",
+    status: "Khóa",
+    date: "24/10/2020",
+  },
+  {
+    key: 3,
+    name: "Lê Văn C",
+    email: "levanc@email.com",
+    status: "Kích hoạt",
+    date: "22/10/2023",
+  },
+  {
+    key: 4,
+    name: "Phạm Thị D",
+    email: "phamthid@email.com",
+    status: "Kích hoạt",
+    date: "20/10/2023",
+  },
+  {
+    key: 5,
+    name: "Hoàng Văn E",
+    email: "hoangvane@email.com",
+    status: "Kích hoạt",
+    date: "18/10/2023",
+  },
+  {
+    key: 6,
+    name: "Vũ Thị F",
+    email: "vuthif@email.com",
+    status: "Khóa",
+    date: "16/10/2023",
+  },
+  {
+    key: 7,
+    name: "Đặng Văn G",
+    email: "dangvang@email.com",
+    status: "Kích hoạt",
+    date: "14/10/2023",
+  },
+  {
+    key: 8,
+    name: "Bùi Thị H",
+    email: "buithih@email.com",
+    status: "Khóa",
+    date: "12/10/2023",
+  },
+  {
+    key: 9,
+    name: "Trịnh Văn I",
+    email: "trinhvani@email.com",
+    status: "Kích hoạt",
+    date: "10/10/2023",
+  },
+  {
+    key: 10,
+    name: "Lý Thị K",
+    email: "lythik@email.com",
+    status: "Khóa",
+    date: "08/10/2023",
+  },
+];
+
 const getStatusPillClasses = (status) => {
   switch (status) {
-    case "ACTIVE":
-      return { bg: "bg-green-100", text: "text-green-800", label: "Kích hoạt" };
-    case "INACTIVE":
-      return { bg: "bg-red-100", text: "text-red-800", label: "Khóa" };
+    case "Kích hoạt":
+      return { bg: "bg-green-100", text: "text-green-800" };
+    case "Khóa":
+      return { bg: "bg-red-100", text: "text-red-800" };
     default:
-      return { bg: "bg-gray-100", text: "text-gray-800", label: status };
+      return { bg: "bg-gray-100", text: "text-gray-800" };
   }
 };
 
 const UserManagementPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [loading] = useState(false);
+  const [users, setUsers] = useState(ALL_USERS_DATA_INITIAL);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedUserDetail, setSelectedUserDetail] = useState(null);
@@ -51,49 +122,13 @@ const UserManagementPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Tất cả");
-
-  // Fetch users from API
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, pageSize]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await userApi.getAll(currentPage - 1, pageSize);
-      const userData = response.data?.content || [];
-      const formattedUsers = userData.map(user => ({
-        key: user.userId,
-        id: user.userId,
-        name: user.name || user.email,
-        email: user.email,
-        phone: user.phone || "",
-        role: user.role || "USER",
-        status: user.locked ? "INACTIVE" : "ACTIVE",
-        locked: user.locked || false,
-        createdAt: user.createdAt,
-        date: user.createdAt ? new Date(user.createdAt).toLocaleDateString("vi-VN") : "",
-      }));
-      setUsers(formattedUsers);
-      setTotalUsers(response.data?.totalElements || 0);
-    } catch (error) {
-      message.error("Không thể tải danh sách người dùng: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  }; 
+  const [filterStatus, setFilterStatus] = useState("Tất cả"); 
 
   const filteredUsers = useMemo(() => {
     let data = users;
 
     if (filterStatus !== "Tất cả") {
-      const statusMap = {
-        "Kích hoạt": "ACTIVE",
-        "Khóa": "INACTIVE"
-      };
-      const mappedStatus = statusMap[filterStatus] || filterStatus;
-      data = data.filter((user) => user.status === mappedStatus);
+      data = data.filter((user) => user.status === filterStatus);
     }
 
     if (searchTerm) {
@@ -104,13 +139,19 @@ const UserManagementPage = () => {
       );
     }
 
-    return data;
-  }, [filterStatus, searchTerm, users]);
+    if (currentPage !== 1 && data.length <= (currentPage - 1) * pageSize) {
+      setCurrentPage(1);
+    }
 
-  const currentUsers = filteredUsers;
-  const displayTotal = searchTerm || filterStatus !== "Tất cả" ? filteredUsers.length : totalUsers;
-  const currentRangeStart = displayTotal > 0 ? ((currentPage - 1) * pageSize) + 1 : 0;
-  const currentRangeEnd = Math.min(currentPage * pageSize, displayTotal);
+    return data;
+  }, [filterStatus, searchTerm, currentPage, pageSize, users]);
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
+  const totalUsers = filteredUsers.length;
+
+  const currentRangeStart = totalUsers > 0 ? startIndex + 1 : 0;
+  const currentRangeEnd = Math.min(startIndex + pageSize, totalUsers);
 
   const handleTableChange = (pagination) => {
     setCurrentPage(pagination.current);
@@ -122,75 +163,55 @@ const UserManagementPage = () => {
     setSelectedUserDetail(user);
     setIsDetailModalVisible(true);
   };
-  const handleSaveUserChanges = async (userId, changes) => {
-    try {
-      setLoading(true);
-      
-      const updateData = {
-        role: changes.role || "USER",
-        name: changes.name,
-        phone: changes.phone || "",
-        email: changes.email,
-        locked: changes.locked
-      };
-      // Only include passwordHash when user provided a new password
-      if (changes.newPassword) {
-        updateData.passwordHash = changes.newPassword;
-      }
-      await userApi.update(userId, updateData);
-      message.success(`Cập nhật thành công tài khoản ID: ${userId}`);
-      setIsDetailModalVisible(false);
-      fetchUsers();
-    } catch (error) {
-      message.error("Không thể cập nhật người dùng: " + error.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleSaveUserChanges = (userId, changes) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => {
+        if (user.key === userId) {
+          const updatedUser = {
+            ...user,
+            name: changes.name,
+            email: changes.email,
+            status: changes.status,
+          };
+          if (changes.newPassword) {
+            console.log(`Mật khẩu cho user ${user.name} đã được thay đổi!`);
+          }
+          return updatedUser;
+        }
+        return user;
+      })
+    );
+    setIsDetailModalVisible(false);
+    message.success(`Cập nhật thành công tài khoản ID: ${userId}`);
   }; // ⭐️ HÀM MỚI: XỬ LÝ XÓA TÀI KHOẢN ⭐️
 
-  const handleDeleteUser = async (user) => {
+  const handleDeleteUser = (user) => {
     const confirmed = window.confirm(
       `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của ${user.name} không?`
     );
 
     if (confirmed) {
-      try {
-        setLoading(true);
-        await userApi.remove(user.id);
-        message.success(`Đã xóa tài khoản ${user.name} thành công.`);
-        // Reset về trang 1 nếu trang hiện tại trống sau khi xóa
-        if (currentUsers.length === 1 && currentPage > 1) {
-          setCurrentPage(currentPage - 1);
-        } else {
-          fetchUsers();
-        }
-      } catch (error) {
-        message.error("Không thể xóa người dùng: " + error.message);
-      } finally {
-        setLoading(false);
+      setUsers((prevUsers) => prevUsers.filter((u) => u.key !== user.key));
+      message.success(`Đã xóa tài khoản ${user.name} thành công.`);
+      // Reset về trang 1 nếu trang hiện tại trống sau khi xóa
+      if (currentUsers.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
       }
     }
   }; // ⭐️ HÀM XỬ LÝ THÊM USER MỚI (Giữ nguyên) ⭐️
 
-  const handleAddNewUser = async (newUser) => {
-    try {
-      setLoading(true);
-      await userApi.create({
-        role: "USER",
-        passwordHash: newUser.password,
-        name: newUser.name,
-        phone: newUser.phone || "",
-        email: newUser.email
-      });
-      message.success("Thêm người dùng thành công!");
-      setIsAddModalVisible(false);
-      setCurrentPage(1);
-      fetchUsers();
-    } catch (error) {
-      message.error("Không thể thêm người dùng: " + error.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleAddNewUser = (newUser) => {
+    const newRecord = {
+      key: Date.now(),
+      name: newUser.name,
+      email: newUser.email,
+      status: "Kích hoạt",
+      date: new Date().toLocaleDateString("vi-VN"),
+    };
+
+    setUsers((prev) => [newRecord, ...prev]);
+    setIsAddModalVisible(false);
+    setCurrentPage(1);
   };
 
   const columns = [
@@ -202,13 +223,13 @@ const UserManagementPage = () => {
       key: "status",
       width: "15%",
       render: (status) => {
-        const { bg, text, label } = getStatusPillClasses(status);
+        const { bg, text } = getStatusPillClasses(status);
 
         return (
           <span
             className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${bg} ${text}`}
           >
-            {label}
+            {status}
           </span>
         );
       },
@@ -226,7 +247,7 @@ const UserManagementPage = () => {
             icon={<EyeOutlined />}
             size="small"
             type="text"
-            onClick={() => {handleViewDetails(user);}}
+            onClick={() => { handleViewDetails(user); }}
           />
           {/* ⭐️ NÚT XÓA MỚI ⭐️ */}
           <Button
@@ -298,7 +319,7 @@ const UserManagementPage = () => {
           pagination={{
             current: currentPage,
             pageSize: pageSize,
-            total: displayTotal,
+            total: totalUsers,
             showSizeChanger: false,
             showQuickJumper: true,
             showTotal: (total) =>

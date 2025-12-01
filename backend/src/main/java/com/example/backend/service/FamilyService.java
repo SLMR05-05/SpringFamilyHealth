@@ -38,4 +38,9 @@ public class FamilyService {
 
     @Transactional
     public void delete(Integer id) { repo.delete(findById(id)); }
+
+    @Transactional(readOnly = true)
+    public List<Family> findByDoctorId(Integer doctorId) {
+        return repo.findByDoctor_DoctorId(doctorId);
+    }
 }

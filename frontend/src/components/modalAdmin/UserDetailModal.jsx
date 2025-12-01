@@ -1,6 +1,6 @@
-    import React, { useState, useEffect } from 'react';
+    import React, { useState } from 'react';
     import { Modal, Button, Typography, Space, Divider, Form, Input, Select, message } from 'antd';
-    import { CloseOutlined, UserOutlined, MailOutlined, LockOutlined, SaveOutlined, PhoneOutlined } from '@ant-design/icons';
+    import { CloseOutlined, UserOutlined, MailOutlined, LockOutlined, SaveOutlined } from '@ant-design/icons';
 
     const { Title, Text } = Typography;
     const { Option } = Select;
@@ -12,26 +12,6 @@
         
         // Đảm bảo user có dữ liệu mặc định và email không bị mất
         const userData = user || {};
-
-        // Cập nhật form khi user thay đổi; clear password fields when switching
-        useEffect(() => {
-            if (isVisible && user) {
-                form.setFieldsValue({
-                    name: user.name,
-                    email: user.email,
-                    phone: user.phone || "",
-                    role: user.role || "USER",
-                    status: user.status || 'Kích hoạt',
-                    newPassword: '',
-                    confirmPassword: '',
-                });
-            }
-
-            // When modal is closed, reset all fields to avoid stale values
-            if (!isVisible) {
-                form.resetFields();
-            }
-        }, [isVisible, user, form]);
 
         const handleFormSubmit = async (values) => {
             try {
@@ -48,10 +28,7 @@
                 const changes = {
                     name: values.name,
                     email: values.email,
-                    phone: values.phone || "",
-                    role: values.role || "USER",
-                    locked: values.status === 'Khóa',
-                    passwordHash: userData.passwordHash || "unchanged",
+                    status: values.status,
                     // Chỉ gửi mật khẩu nếu nó được điền
                     newPassword: values.newPassword || undefined, 
                 };
@@ -62,7 +39,6 @@
                 message.success(`Cập nhật tài khoản ${userData.name} thành công!`);
                 onClose();
 
-            // eslint-disable-next-line no-unused-vars
             } catch (error) {
                 message.error("Có lỗi xảy ra khi lưu thay đổi.");
             } finally {
@@ -74,8 +50,6 @@
         const initialValues = {
             name: userData.name,
             email: userData.email,
-            phone: userData.phone || "",
-            role: userData.role || "USER",
             status: userData.status || 'Kích hoạt',
         };
 
@@ -97,16 +71,9 @@
                     className="mt-4"
                 >
                     {/* ID TÀI KHOẢN */}
-                    <div className="mb-4">
-                        <Text type="secondary" className="block">
-                            ID hệ thống: {userData.key || 'N/A'}
-                        </Text>
-                        {userData.createdAt && (
-                            <Text type="secondary" className="block text-xs mt-1">
-                                Ngày tạo: {new Date(userData.createdAt).toLocaleString('vi-VN')}
-                            </Text>
-                        )}
-                    </div>
+                    <Text type="secondary" className="block mb-4">
+                        ID hệ thống: {userData.key || 'N/A'}
+                    </Text>
 
                     {/* Tên người dùng */}
                     <Form.Item
@@ -125,28 +92,6 @@
                     >
                         <Input prefix={<MailOutlined className="text-gray-400" />} />
                     </Form.Item>
-
-                    {/* Số điện thoại */}
-                    <Form.Item
-                        name="phone"
-                        label="Số điện thoại"
-                        rules={[{ pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại phải có 10-11 chữ số!' }]}
-                    >
-                        <Input prefix={<PhoneOutlined className="text-gray-400" />} placeholder="Ví dụ: 0909222333" />
-                    </Form.Item>
-
-                    {/* Role (Select) */}
-                    <Form.Item
-                        name="role"
-                        label="Vai trò"
-                        rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
-                    >
-                        <Select placeholder="Chọn vai trò">
-                            <Option value="USER">Người dùng</Option>
-                            <Option value="ADMIN">Quản trị viên</Option>
-                            <Option value="DOCTOR">Bác sĩ</Option>
-                        </Select>
-                    </Form.Item>
                     
                     {/* Trạng thái (Select) */}
                     <Form.Item
@@ -163,13 +108,11 @@
                     <Divider className="my-3" />
                     <Title level={5} className="mt-0 mb-4">Thay đổi Mật khẩu</Title>
 
-                    {/* Mật khẩu mới (để trống nếu không muốn thay đổi) */}
+                    {/* Mật khẩu mới */}
                     <Form.Item
                         name="newPassword"
                         label="Mật khẩu mới"
-                        rules={[
-                            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự.' }
-                        ]}
+                        rules={[{ min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự.' }]}
                         hasFeedback
                     >
                         <Input.Password prefix={<LockOutlined className="text-gray-400" />} placeholder="Để trống nếu không muốn thay đổi" />

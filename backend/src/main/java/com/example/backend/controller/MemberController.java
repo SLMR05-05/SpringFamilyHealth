@@ -28,7 +28,7 @@ public class MemberController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<MemberResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<MemberResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -36,7 +36,7 @@ public class MemberController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<MemberResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<MemberResponse>builder()
                 .result(toResponse(service.findById(id)))

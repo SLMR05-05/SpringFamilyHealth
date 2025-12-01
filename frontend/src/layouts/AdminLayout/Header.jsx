@@ -6,7 +6,6 @@ import {
 } from "@ant-design/icons";
 import { Header } from "antd/es/layout/layout";
 import UserDropDown from "./UserDropDown";
-import NotificationDropdown from "../../components/NotificationDropdown";
 import { useState } from "react";
 
 const HeaderLayout = () => {
@@ -18,7 +17,6 @@ const HeaderLayout = () => {
     
       {/* Right */}
       <Space size={16}>
-        <NotificationDropdown />
         <UserDropDown />
       </Space>
     </Header>

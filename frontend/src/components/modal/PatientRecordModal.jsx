@@ -1,203 +1,146 @@
-import { Modal, Button, Typography, Tabs, Tag, Space, Divider, Tooltip, Card } from 'antd';
 import React from 'react';
-import { DownloadOutlined, EditOutlined, ArrowLeftOutlined, CloseOutlined } from '@ant-design/icons';
-// import ApprovalStatusModal from './ApprovalStatusModal'; // Giữ nguyên import nếu bạn sử dụng nó
-// ... (ApprovalStatusModal được giả định là được quản lý bởi component cha)
+import { Modal, Typography, Row, Col, Tag, Tabs, Space } from 'antd';
+import { 
+    PhoneOutlined, MailOutlined, CalendarOutlined, HeartFilled, FileTextOutlined 
+} from '@ant-design/icons';
+// Đảm bảo tất cả các component con đã được import
+import ChartTabs from './ChartTabs'; 
+import PrescriptionsTab from './PrescriptionsTab'; 
+import VaccinationTab from './VaccinationTab'; 
+import VitalsTab from './VitalsTab'; 
+import PrescribeMed from './PrescribeMed'; // <--- IMPORT COMPONENT KÊ ĐƠN THUỐC
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
-// --- Dữ liệu giả định cho Modal ---
-const patientData = {
-    name: "Lê Văn An",
-    id: "BN123456",
-    birthDate: "15/05/1985 (39 tuổi)",
-    gender: "Nam",
-    phone: "090xxxxxxx",
-    address: "123 Đường ABC, Quận 1, TP.HCM",
-    bloodGroup: "O+",
-    allergies: "Hải sản, Penicillin",
-    chronicDiseases: "Cao huyết áp, Tiểu đường tuýp 2",
-    avatarUrl: "path/to/avatar.jpg"
+// ✅ DỮ LIỆU MẪU (Gộp gọn)
+const SAMPLE_DATA = {
+    vitalsHistory: [
+        { date: '15/9/2024', bp: '140/90 mmHg', hr: '78 bpm', temp: '36.5 °C', weight: '70 kg', height: '170 cm' },
+        { date: '20/8/2024', bp: '135/88 mmHg', hr: '75 bpm', temp: '36.8 °C', weight: '71 kg', height: '170 cm' },
+    ],
+    vaccinations: [
+        { name: 'Cúm mùa', doctor: 'Nguyễn Văn A', date: '1/9/2024', next: '1/9/2025', notes: 'Tiêm hàng năm' },
+        { name: 'COVID-19', doctor: 'Trần Thị B', date: '15/6/2024', next: '15/6/2025', notes: 'Không phản ứng phụ' },
+    ],
+    prescriptions: [
+        { doctor: 'Nguyễn Văn A', date: '15/9/2024', medications: [
+            { name: 'Amlodipine 5mg', dose: '1 viên', freq: '1 lần/ngày', duration: '30 ngày' }
+        ], instructions: 'Uống sau ăn sáng' },
+    ],
+    allergies: [{ name: 'Aspirin' }],
+    conditions: [{ name: 'Viêm khớp' }],
+    history: [{
+        type: 'Khám sức khỏe', doctor: 'BS. Nguyễn Văn A', date: '15/9/2024',
+        diagnosis: 'Sức khỏe tốt', treatment: 'Duy trì tập luyện', 
+        note: 'Theo dõi huyết áp', icon: <HeartFilled className="text-green-500 text-xl" />
+    }]
 };
 
-// Dữ liệu Lịch sử bệnh án (History)
-const medicalHistory = [
-    // ... (Dữ liệu lịch sử giữ nguyên)
-    {
-        date: "18/07/  2025",
-        hospital: "Bệnh viện Đa khoa Quốc tế",
-        type: "Khám tổng quát định kỳ",
-        tag: "Khám tổng quát",
-        symptoms: "Mệt mỏi, thỉnh thoảng đau đầu.",
-        diagnosis: "Sức khỏe ổn định, cao huyết áp được kiểm soát tốt.",
-        doctor: "BS. Nguyễn Văn Hùng",
-        statusColor: 'blue'
-    },
-    {
-        date: "02/03/  2025",
-        hospital: "Phòng khám Tim mạch",
-        type: "Tái khám cao huyết áp",
-        tag: "Tái khám",
-        symptoms: "Chẩn đoán: Tăng huyết áp vô căn. Chỉ số huyết áp 130/85 mmHg.",
-        diagnosis: "Yêu cầu: Tiếp tục dùng thuốc theo đơn, tái khám sau 3 tháng. Theo dõi huyết áp tại nhà.",
-        doctor: "BS. Trần Thị Mai",
-        statusColor: 'orange'
-    },
-    {
-        date: "15/11/2023",
-        hospital: "Bệnh viện Tai Mũi Họng",
-        type: "Viêm họng cấp",
-        tag: "Điều trị",
-        symptoms: "Triệu chứng: Đau họng, sổ mũi, ho khan.",
-        diagnosis: "Chẩn đoán: Viêm họng cấp do virus. Kê đơn: Thuốc giảm đau, hạ sốt và siro ho.",
-        doctor: "BS. Lê Minh Tuấn",
-        statusColor: 'red'
-    },
-];
+const PatientRecordModal = ({ isVisible, onClose, patientData: propData }) => {
+    if (!isVisible) return null;
 
-// Component hiển thị chi tiết một lần khám
-const ExaminationDetail = ({ data }) => {
-    // Hàm chọn màu cho Tag
-    const getTagColor = (tag) => {
-        switch (tag) {
-            case 'Khám tổng quát': return 'blue';
-            case 'Tái khám': return 'orange';
-            case 'Điều trị': return 'red';
-            default: return 'gray';
-        }
+    // ✅ MERGE DỮ LIỆU: Thật + Mẫu (Tự động có dữ liệu)
+    const data = {
+        name: propData?.name || 'Trần Thị Bình',
+        age: propData?.age || 38,
+        gender: propData?.gender || 'Nữ',
+        role: propData?.role || 'Chủ hộ',
+        contact: { 
+            phone: propData?.contact?.phone || '0902345678', // Sử dụng Optional Chaining cho contact
+            email: propData?.contact?.email || 'binh.tran@email.com' 
+        },
+        medicalInfo: { 
+            bloodType: propData?.medicalInfo?.bloodType || 'B+', // Sử dụng Optional Chaining cho medicalInfo
+            lastCheckup: propData?.medicalInfo?.lastCheckup || '20/9/2024' 
+        },
+        // ✅ LUÔN CÓ DỮ LIỆU CHO TẤT CẢ TABS
+        ...SAMPLE_DATA,
+        ...propData // Override bằng dữ liệu thật nếu có
     };
 
-    return (
-        <Card className="shadow-sm border border-gray-200 mb-4 p-0">
-            <div className="flex justify-between items-start border-b pb-2 mb-2">
-                <Space direction="vertical" size={2}>
-                    <Text className="text-base font-semibold text-gray-800">{data.date} - {data.hospital}</Text>
-                    <Text className="text-lg font-bold">{data.type}</Text>
-                </Space>
-                <Tag color={getTagColor(data.tag)} className="text-sm px-3 py-1 font-medium">{data.tag}</Tag>
-            </div>
-            
-            {/* Nội dung chi tiết */}
-            <div className="text-sm space-y-2">
-                {data.symptoms && (
-                    <div>
-                        <Text className="font-semibold block">Triệu chứng:</Text>
-                        <Text className="text-gray-700 ml-2">{data.symptoms}</Text>
+    // ✅ RENDER LỊCH SỬ KHÁM (Gọn)
+    const renderHistory = () => (
+        <div className="space-y-4">
+            <Text type="secondary">Lịch sử khám bệnh</Text>
+            {data.history.map((item, i) => (
+                <div key={i} className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-start space-x-4">
+                            <div className="pt-1">{item.icon}</div>
+                            <div>
+                                <Text strong>{item.type}</Text>
+                                <Text type="secondary" className="ml-2">BS. {item.doctor}</Text>
+                                <div className="mt-2 space-y-1 text-sm">
+                                    <Text>{item.diagnosis}</Text>
+                                    <Text>{item.treatment}</Text>
+                                    <Text type="secondary">{item.note}</Text>
+                                </div>
+                            </div>
+                        </div>
+                        <Text type="secondary">{item.date}</Text>
                     </div>
-                )}
-                <div>
-                    <Text className="font-semibold block">Chẩn đoán:</Text>
-                    <Text className="text-gray-700 ml-2">{data.diagnosis}</Text>
                 </div>
-                <div className="pt-2">
-                    <Text className="font-semibold text-sm">Bác sĩ điều trị: </Text>
-                    <Text className="text-blue-600 font-medium">{data.doctor}</Text>
-                </div>
-            </div>
-        </Card>
+            ))}
+        </div>
     );
-};
 
-
-// ⭐️ THÊM onApprove VÀO PROPS
-const PatientRecordModal = ({ isVisible, onClose, patientRecord, onApprove }) => { 
-    // Sử dụng dữ liệu giả định nếu không có patientRecord truyền vào
-    const data = patientRecord || patientData; 
-    
-    // Items cho Tabs
     const tabItems = [
-        {
-            key: '1',
-            label: 'Lịch sử bệnh án',
-            children: (
-                <div className="space-y-4">
-                    {medicalHistory.map((item, index) => (
-                        <ExaminationDetail key={index} data={item} />
-                    ))}
-                </div>
-            ),
+        { label: 'Lịch sử khám', key: 'history', children: renderHistory() },
+        { label: 'Sinh hiệu', key: 'vitals', children: <VitalsTab vitalsHistory={data.vitalsHistory} /> },
+        { label: 'Biểu đồ', key: 'charts', children: <ChartTabs vitalsData={data.vitalsHistory} /> },
+        { label: 'Tiêm chủng', key: 'vaccination', children: <VaccinationTab vaccinations={data.vaccinations} /> },
+        { label: 'Đơn thuốc', key: 'prescriptions', children: <PrescriptionsTab prescriptions={data.prescriptions} /> },
+        // THAY THẾ CHỖ NÀY BẰNG COMPONENT PrescribeMed
+        { 
+            label: 'Kê đơn thuốc', 
+            key: 'prescribe', 
+            children: <PrescribeMed patientData={data} /> 
         },
-        { key:'2',label :'Tiêm văc xin', children: <Text type="secondary" className='pt-4 block'>Chưa có thông tin tiêm vắc xin.</Text>},
-        { key: '3', label:'Huyết áp', children: <Text type="secondary" className='pt-4 block'>Chưa có thông tin huyết áp.</Text>},
-        { key: '4', label: 'Kết quả xét nghiệm', children: <Text type="secondary">Chưa có kết quả xét nghiệm gần đây.</Text> },
-        { key: '5', label: 'Đơn thuốc', children: <Text type="secondary">Chưa có đơn thuốc gần đây.</Text> },
-        { key: '6', label: 'Chỉ dẫn của bác sĩ', children: <Text type="secondary">Chưa có chỉ dẫn đặc biệt.</Text> },
     ];
 
     return (
-        <Modal
-            open={isVisible}
-            onCancel={onClose}
-            width={'90%'} // Modal rộng hơn để chứa nội dung
-            style={{ top: 20 }} // Đẩy modal lên trên
-            closable={false} // Tắt nút đóng mặc định
-            footer={null} // Loại bỏ footer mặc định
-        >
-            <div className="p-4"> {/* Padding bên trong modal */}
-                {/* ⭐️ HEADER VÀ THÔNG TIN CƠ BẢN ⭐️ */}
-                <div className="flex flex-col mb-4">
-                    {/* Hàng trên cùng: Tên, ID, Nút Hành động */}
-                    <div className="flex justify-between items-center pb-4 border-b">
-                        <Space>
-                            <Button icon={<ArrowLeftOutlined />} onClick={onClose} type="text" className="text-xl text-gray-600 hover:text-blue-600" />
-                            <Space direction="vertical" size={0}>
-                                <Title level={3} className="m-0 font-bold">{data.name}</Title>
-                                <Text className="text-gray-500 text-sm">ID: {data.id}</Text>
+        <Modal open={isVisible} onCancel={onClose} footer={null} width={1400} centered>
+            <div className="p-6">
+                {/* HEADER */}
+                <div className="mb-6 pb-4 border-b">
+                    <Title level={3} className="m-0">{data.name}</Title>
+                    <Text type="secondary">{data.age} tuổi • {data.gender} • {data.role}</Text>
+
+                    <Row gutter={16} className="mt-4">
+                        <Col span={6}>
+                            <Text strong className="block mb-2">Thông tin liên hệ</Text>
+                            <Space direction="vertical" size={1}>
+                                <Text><PhoneOutlined /> {data.contact.phone}</Text>
+                                <Text><MailOutlined /> {data.contact.email}</Text>
                             </Space>
-                        </Space>
-                        <Space>
-                            <Button icon={<DownloadOutlined />} type="default">Tải xuống</Button>
-                            
-                            
-                            {/* ⭐️ NÚT DUYỆT MỚI ⭐️ */}
-                            <Button 
-                                type="primary" 
-                                className="bg-green-600 hover:bg-green-700"
-                                // Khi nhấn Duyệt: Đóng Modal hiện tại và gọi hàm onApprove
-                                onClick={() => {
-                                    onClose(); 
-                                    if (onApprove) {
-                                        onApprove(data.name, data.id);
-                                    }
-                                }}
-                            >
-                                Duyệt
-                            </Button>
-
-                            <Button icon={<CloseOutlined />} onClick={onClose} type="text" className="text-xl text-gray-600" />
-                        </Space>
-                    </div>
-
-                    {/* Hàng thứ 2: Avatar và Thông tin chi tiết */}
-                    <div className="flex items-start mt-4">
-                        {/* Avatar */}
-                        <div className="mr-6">
-                            <img src={data.avatarUrl || "https://via.placeholder.com/80"} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
-                        </div>
-
-                        {/* Thông tin cá nhân cơ bản (Grid) */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-8 w-full">
-                            
-                            {/* Dòng 1 */}
-                            <div className="flex flex-col"><Text type="secondary">Ngày sinh</Text><Text className="font-medium">{data.birthDate}</Text></div>
-                            <div className="flex flex-col"><Text type="secondary">Giới tính</Text><Text className="font-medium">{data.gender}</Text></div>
-                            <div className="flex flex-col"><Text type="secondary">Số điện thoại</Text><Text className="font-medium">{data.phone}</Text></div>
-                            
-                            {/* Dòng 2 */}
-                            <div className="flex flex-col"><Text type="secondary">Nhóm máu</Text><Text className="font-medium">{data.bloodGroup}</Text></div>
-                            <div className="flex flex-col"><Text type="secondary">Dị ứng</Text><Text className="font-medium text-red-600">{data.allergies}</Text></div>
-                            <div className="flex flex-col"><Text type="secondary">Bệnh nền</Text><Text className="font-medium">{data.chronicDiseases}</Text></div>
-                        </div>
-                    </div>
+                        </Col>
+                        <Col span={6}>
+                            <Text strong className="block mb-2">Thông tin y tế</Text>
+                            <Space direction="vertical" size={1}>
+                                <Text><HeartFilled /> {data.medicalInfo.bloodType}</Text>
+                                <Text><CalendarOutlined /> {data.medicalInfo.lastCheckup}</Text>
+                            </Space>
+                        </Col>
+                        <Col span={6}>
+                            <Text strong className="block mb-2 text-red-600">⚠️ Dị ứng</Text>
+                            {data.allergies.map(a => (
+                                <Tag key={a.name} color="error">{a.name}</Tag>
+                            ))}
+                        </Col>
+                        <Col span={6}>
+                            <Text strong className="block mb-2">Bệnh lý</Text>
+                            {data.conditions.map(c => (
+                                <Tag key={c.name} color="default">{c.name}</Tag>
+                            ))}
+                        </Col>
+                    </Row>
                 </div>
 
-                {/* ⭐️ TABS NỘI DUNG ⭐️ */}
-                <Divider className="my-4" />
-                <Tabs defaultActiveKey="1" items={tabItems} size="large" />
-                
+                {/* TABS */}
+                <Tabs defaultActiveKey="history" items={tabItems} />
             </div>
         </Modal>
     );
 };
 
-export default PatientRecordModal;
+export default PatientRecordModal;  

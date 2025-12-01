@@ -5,11 +5,14 @@ import com.example.backend.dto.doctor.DoctorUpdateRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.DoctorResponse;
 import com.example.backend.dto.response.MemberResponse;
+import com.example.backend.dto.response.FamilyResponse;
 import com.example.backend.entity.Doctor;
 import com.example.backend.entity.Member;
+import com.example.backend.entity.Family;
 import com.example.backend.service.DoctorService;
 import com.example.backend.service.MemberService;
 import com.example.backend.service.UserService;
+import com.example.backend.service.FamilyService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,11 +29,13 @@ public class DoctorController {
     private final DoctorService service;
     private final UserService userService;
     private final MemberService memberService;
+    private final FamilyService familyService;
     
-    public DoctorController(DoctorService service, UserService userService, MemberService memberService) {
+    public DoctorController(DoctorService service, UserService userService, MemberService memberService, FamilyService familyService) {
         this.service = service;
         this.userService = userService;
         this.memberService = memberService;
+        this.familyService = familyService;
     }
 
     @GetMapping
@@ -97,6 +102,22 @@ public class DoctorController {
                 .build();
     }
 
+    /**
+     * Lấy danh sách tất cả gia đình do bác sĩ này quản lý
+     * Endpoint: GET /api/doctors/{id}/families
+     */
+    @GetMapping("/{id}/families")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    public ApiResponse<List<FamilyResponse>> getFamiliesByDoctorId(@PathVariable Integer id) {
+        List<Family> families = familyService.findByDoctorId(id);
+        List<FamilyResponse> responses = families.stream()
+                .map(this::toFamilyResponse)
+                .collect(Collectors.toList());
+        return ApiResponse.<List<FamilyResponse>>builder()
+                .result(responses)
+                .build();
+    }
+
     private DoctorResponse toResponse(Doctor d) {
         DoctorResponse res = new DoctorResponse();
         res.setDoctorId(d.getDoctorId());
@@ -139,6 +160,21 @@ public class DoctorController {
         res.setPhone(m.getPhone());
         res.setEmail(m.getEmail());
         res.setAddress(m.getAddress());
+        
+        return res;
+    }
+
+    private FamilyResponse toFamilyResponse(Family f) {
+        FamilyResponse res = new FamilyResponse();
+        res.setFamilyId(f.getFamilyId());
+        res.setDoctorId(f.getDoctor() != null ? f.getDoctor().getDoctorId() : null);
+        res.setAddress(f.getAddress());
+        res.setContactNumber(f.getContactNumber());
+        
+        // Include doctor name
+        if (f.getDoctor() != null && f.getDoctor().getUser() != null) {
+            res.setDoctorName(f.getDoctor().getUser().getName());
+        }
         
         return res;
     }

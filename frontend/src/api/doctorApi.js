@@ -32,6 +32,11 @@ const doctorApi = {
   getPatients(doctorId) {
     return axiosClient.get(`/doctors/${doctorId}/patients`);
   },
+
+  // Get all families managed by a specific doctor
+  getFamilies(doctorId) {
+    return axiosClient.get(`/doctors/${doctorId}/families`);
+  },
 };
 
 export default doctorApi;

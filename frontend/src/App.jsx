@@ -1,41 +1,38 @@
-import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate,useRoutes } from 'react-router-dom';
-import './index.css'
-import Login from './page/Login.jsx'
-import UserDashboard from "./page/UserDashboard.jsx";
-import { AuthProvider } from './context/AuthProvider.jsx';
-import PrivateRoute from './component/PrivateRoute.jsx';
-import { useTranslation } from "react-i18next";
-// import DoctorDashboard from './page/doctor/DotorDashboard.jsx';
-import { DoctorRoutes } from './routes/DoctorRoutes'; 
-import { AdminRoutes } from './routes/AdminRoutes';
 
-const AppRoutes = () => {
-  const { t, i18n } = useTranslation();
+import { useRoutes, Navigate } from 'react-router-dom';
+import { DoctorRoutes } from './routes/DoctorRoutes';
+import { AdminRoutes } from './routes/AdminRoutes';
+import { AuthRoutes } from './routes/AuthRoutes';
+import UserDashboard from './page/UserDashboard';
+
+// chua chia root cho admin va doctor
+// muon test thi thay admin thanh doctor
+const App = () => {
+  // const routes = useRoutes([
+  //   { path: '/', element: <Navigate to="/admin" replace /> },
+  //   AdminRoutes,
+  //   { path: '*', element: <Navigate to="/admin" replace /> }
+  // ]);
+  // return routes;
+
+  // const routes = useRoutes([
+  //   { path: '/', element: <Navigate to="/doctor" replace /> },
+  //   DoctorRoutes,
+  //   { path: '*', element: <Navigate to="/doctor" replace /> }
+  // ]);
+  // return routes;
+
   const routes = useRoutes([
-    {
-      path: "/login",
-      element: <Login />
-    },
-    {
-      path: "/user-dashboard",
-      element: <UserDashboard />
-    },
-    { path: '/', element: <Navigate to="/admin" replace /> },
+    { path: '/', element: <Navigate to="/auth" replace /> },
+    AuthRoutes,
     AdminRoutes,
     DoctorRoutes,
-    { path: '*', element: <Navigate to="/doctor" replace /> }
+    { path: '/user-dashboard', element: <UserDashboard /> },
+    { path: '*', element: <Navigate to="/auth" replace /> }
   ]);
   return routes;
-};
-function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes></AppRoutes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
 
-export default App
+
+};
+
+export default App;
