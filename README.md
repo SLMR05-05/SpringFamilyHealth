@@ -55,6 +55,7 @@ docker logs familyhealth-app -f
 **Các URL:**
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8080
+- **Swagger UI (API Docs)**: http://localhost:8080/swagger-ui.html
 - MySQL: localhost:3306 (root/root)
 
 **Thời gian:**
@@ -296,9 +297,32 @@ docker system prune -a --volumes
 
 ## 📝 API Documentation
 
+### Swagger UI (Interactive API Docs)
+
+Truy cập **Swagger UI** tại: http://localhost:8080/swagger-ui.html
+
+**Features:**
+- 📚 Xem tất cả API endpoints với mô tả chi tiết
+- 🧪 Test API trực tiếp từ browser
+- 🔐 Hỗ trợ JWT authentication (click "Authorize", nhập `Bearer <token>`)
+- 📥 Xem request/response schemas
+
+**Các bước sử dụng:**
+1. Lấy JWT token từ `/auth/token` (POST với email/password)
+2. Click nút **"Authorize"** ở góc phải
+3. Nhập: `Bearer <your-token-here>`
+4. Test các protected endpoints
+
+### OpenAPI Specification
+
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+- OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
+
+### REST API Endpoints
+
 API endpoints available tại `http://localhost:8080/api/*`
 
-Xem file `backend/src/main/java/com/example/backend/controllers/` để biết chi tiết các endpoints.
+Xem Swagger UI hoặc `backend/src/main/java/com/example/backend/controller/` để biết chi tiết.
 
 ## 🤝 Contributing
 

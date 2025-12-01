@@ -7,6 +7,12 @@ import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.entity.Appointment;
 import com.example.backend.entity.Doctor;
 import com.example.backend.entity.Member;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.example.backend.service.AppointmentService;
@@ -24,6 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/appointments")
 @CrossOrigin
+@Tag(name = "Appointments", description = "Appointment management APIs for scheduling and tracking medical appointments")
 public class AppointmentController {
     private final AppointmentService appointmentService;
     private final DoctorService doctorService;
@@ -41,9 +48,15 @@ public class AppointmentController {
     /**
      * Get all appointments by doctor ID
      */
+    @Operation(
+            summary = "Get appointments by doctor ID",
+            description = "Retrieve all appointments for a specific doctor. Requires ADMIN or DOCTOR role."
+    )
     @GetMapping("/doctor/{doctorId}")
     @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
-    public ApiResponse<List<AppointmentResponse>> getByDoctorId(@PathVariable Integer doctorId) {
+    public ApiResponse<List<AppointmentResponse>> getByDoctorId(
+            @Parameter(description = "ID of the doctor", required = true)
+            @PathVariable Integer doctorId) {
         List<Appointment> appointments = appointmentService.findByDoctorId(doctorId);
         return ApiResponse.<List<AppointmentResponse>>builder()
                 .result(appointments.stream().map(this::toResponse).collect(Collectors.toList()))

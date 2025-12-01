@@ -30,11 +30,18 @@ public class SecurityConfig {
             "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh"
     };
 
+    private static final String[] SWAGGER_WHITELIST = new String[] {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers(SWAGGER_WHITELIST).permitAll()
                 .anyRequest().authenticated()
         );
 
