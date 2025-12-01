@@ -118,6 +118,19 @@ public class MemberController {
                 member.setHeight(((Number) heightObj).floatValue());
             }
         }
+        // Also allow updating contact fields (phone, email) from user settings
+        if (updates.containsKey("phone")) {
+            Object phoneObj = updates.get("phone");
+            if (phoneObj != null) {
+                member.setPhone(phoneObj.toString());
+            }
+        }
+        if (updates.containsKey("email")) {
+            Object emailObj = updates.get("email");
+            if (emailObj != null) {
+                member.setEmail(emailObj.toString());
+            }
+        }
         
         Member updated = service.update(member.getMemberId(), member);
         return ApiResponse.<MemberResponse>builder()

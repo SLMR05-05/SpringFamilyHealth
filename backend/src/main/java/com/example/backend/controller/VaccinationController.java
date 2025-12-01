@@ -48,12 +48,18 @@ public class VaccinationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<VaccinationResponse> create(@Valid @RequestBody VaccinationCreateRequest req) {
         Vaccination entity = new Vaccination();
         entity.setMember(memberService.findById(req.getMemberId()));
+        if (req.getDoctorId() != null) {
+            entity.setDoctor(service.findDoctorById(req.getDoctorId()));
+        }
         entity.setVaccineName(req.getVaccineName());
         entity.setDateGiven(req.getDateGiven());
+        entity.setNextDose(req.getNextDose());
+        entity.setLocation(req.getLocation());
+        entity.setNotes(req.getNotes());
         Vaccination created = service.create(entity);
         return ApiResponse.<VaccinationResponse>builder()
                 .result(toResponse(created))
@@ -61,12 +67,18 @@ public class VaccinationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
     public ApiResponse<VaccinationResponse> update(@PathVariable Integer id, @Valid @RequestBody VaccinationUpdateRequest req) {
         Vaccination payload = new Vaccination();
         payload.setMember(memberService.findById(req.getMemberId()));
+        if (req.getDoctorId() != null) {
+            payload.setDoctor(service.findDoctorById(req.getDoctorId()));
+        }
         payload.setVaccineName(req.getVaccineName());
         payload.setDateGiven(req.getDateGiven());
+        payload.setNextDose(req.getNextDose());
+        payload.setLocation(req.getLocation());
+        payload.setNotes(req.getNotes());
         return ApiResponse.<VaccinationResponse>builder()
                 .result(toResponse(service.update(id, payload)))
                 .build();
@@ -83,8 +95,15 @@ public class VaccinationController {
         VaccinationResponse res = new VaccinationResponse();
         res.setVaccineId(v.getVaccineId());
         res.setMemberId(v.getMember() != null ? v.getMember().getMemberId() : null);
+        res.setDoctorId(v.getDoctor() != null ? v.getDoctor().getDoctorId() : null);
+        res.setDoctorName(v.getDoctor() != null && v.getDoctor().getUser() != null ? v.getDoctor().getUser().getName() : null);
         res.setVaccineName(v.getVaccineName());
         res.setDateGiven(v.getDateGiven());
+        res.setNextDose(v.getNextDose());
+        res.setLocation(v.getLocation());
+        res.setNotes(v.getNotes());
+        res.setCreatedAt(v.getCreatedAt());
+        res.setUpdatedAt(v.getUpdatedAt());
         return res;
     }
 }

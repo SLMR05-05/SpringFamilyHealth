@@ -4,6 +4,7 @@ import { Typography, Button, Form, Input, DatePicker, message } from 'antd';
 import { CheckCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import vaccinationApi from '../../api/vaccinationApi';
+import { useAuth } from '../../context/AuthProvider';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -12,6 +13,7 @@ const VaccinationTab = ({ vaccinations, memberId, onVaccinationAdded }) => {
     const [form] = Form.useForm();
     const [isAddingVaccination, setIsAddingVaccination] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
 
     const handleAddVaccination = async (values) => {
         if (!memberId) {
@@ -24,12 +26,15 @@ const VaccinationTab = ({ vaccinations, memberId, onVaccinationAdded }) => {
             const payload = {
                 memberId: memberId,
                 vaccineName: values.vaccineName,
-                vaccinationDate: values.vaccinationDate.format('YYYY-MM-DD'),
+                dateGiven: values.vaccinationDate.format('YYYY-MM-DD'),
                 nextDose: values.nextDose ? values.nextDose.format('YYYY-MM-DD') : null,
                 location: values.location || null,
-                notes: values.notes || null
+                notes: values.notes || null,
+                // include doctorId automatically when current user is a doctor
+                doctorId: user && (user.role === 'doctor' || user.role === 'DOCTOR') ? user.userId : null,
             };
 
+            console.debug('Creating vaccination payload:', payload);
             await vaccinationApi.create(payload);
             message.success('Đã thêm thông tin tiêm chủng');
             form.resetFields();
@@ -133,11 +138,11 @@ const VaccinationTab = ({ vaccinations, memberId, onVaccinationAdded }) => {
                 vaccinations.map((vax, index) => {
                     const idKey = vax.vaccinationId || vax.vaccine_id || vax.id || index;
                     const vaccineName = vax.vaccineName || vax.name || vax.vaccine_name || 'Vaccine';
-                    const vaccinationDate = vax.vaccinationDate || vax.date_given || vax.date || null;
+                    const vaccinationDate = vax.dateGiven || vax.vaccinationDate || vax.date_given || vax.date || null;
                     const nextDose = vax.nextDose || vax.next_dose || null;
                     const location = vax.location || null;
                     const notes = vax.notes || vax.note || null;
-                    const doctorRef = vax.doctorId || vax.doctor_id || null;
+                    const doctorRef = vax.doctorName || vax.doctorId || vax.doctor_id || null;
 
                     return (
                         <div key={idKey} className="flex justify-between items-start pb-4 border-b last:border-b-0">

@@ -2,7 +2,7 @@
 
 import React from 'react';
 // KHÔNG cần import { Button } từ 'antd' nữa
-import MenuDoctorConfig from "./MenuDoctorConfig";
+import MenuDoctorConfig from "./menuDoctorConfig";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const PillTabNavigation = () => {

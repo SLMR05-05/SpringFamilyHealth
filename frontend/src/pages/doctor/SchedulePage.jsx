@@ -21,18 +21,47 @@ const TodayAppointmentList = () => {
             try {
                 const start = dayjs().startOf('day').toDate();
                 const end = dayjs().endOf('day').toDate();
-                const resp = await appointmentApi.getByDateRange(user.userId, start, end);
-                // The API may return data in resp.data or resp.result
-                // Handle different response shapes (direct array, { data: [...] }, or paged { data: { content: [...] } })
-                let items = resp?.data || resp?.result || resp || [];
-                if (items && items.data && Array.isArray(items.data)) {
-                    items = items.data;
+                // Attempt to fetch by date range, but also fetch full doctor list as a fallback
+                const [rangeResp, allResp] = await Promise.allSettled([
+                    appointmentApi.getByDateRange(user.userId, start, end),
+                    appointmentApi.getByDoctorId(user.userId)
+                ]);
+
+                // Prefer rangeResp result, but merge with full list to ensure completeness
+                let items = [];
+                if (rangeResp.status === 'fulfilled') items = rangeResp.value?.data || rangeResp.value?.result || rangeResp.value || [];
+                if (allResp.status === 'fulfilled') {
+                    const allItems = allResp.value?.data || allResp.value?.result || allResp.value || [];
+                    // merge unique by appointment id
+                    const map = new Map();
+                    (items || []).forEach(it => map.set(String(it.appointmentId || it.id || it.appointment_id), it));
+                    (allItems || []).forEach(it => {
+                        const key = String(it.appointmentId || it.id || it.appointment_id);
+                        if (!map.has(key)) map.set(key, it);
+                    });
+                    items = Array.from(map.values());
                 }
-                if (resp?.data && resp.data.content && Array.isArray(resp.data.content)) {
-                    items = resp.data.content;
-                }
+                // `items` already contains the merged results from rangeResp and allResp
+                // (normalized below). No additional resp variable is expected here.
+                // Filter results to only include appointments for today.
+                // Try several common date fields; if none exist but a time field exists,
+                // assume the item refers to today's schedule.
+                const filteredItems = (items || []).filter(it => {
+                    const possibleDate = it.appointment_date || it.appointmentDate || it.appointmentAt || it.startTime || it.start_at || it.start || it.date || it.appointment_datetime || it.appointmentDatetime;
+                    if (possibleDate) {
+                        try {
+                            return dayjs(possibleDate).isValid() && dayjs(possibleDate).isSame(dayjs(), 'day');
+                        } catch {
+                            return false;
+                        }
+                    }
+                    // If no explicit date but there is a time value, treat it as today's appointment
+                    if (it.time || it.startTime || it.start_at || it.start) return true;
+                    return false;
+                });
+                items = filteredItems;
                 // Debug help: log first few items so we can inspect field names in the network response
-                console.debug('appointments.rawResp', { resp, sample: Array.isArray(items) ? items.slice(0,3) : items });
+                console.debug('appointments.rawResp', { rangeResp, allResp, sample: Array.isArray(items) ? items.slice(0,3) : items });
                 // Normalize items to expected shape
                 const normalized = (items || []).map(it => {
                     // Try many possible date/time fields that backend might return
@@ -143,7 +172,7 @@ const TodayAppointmentList = () => {
     const getActionAndStatus = (appointment) => {
         const linkTag = appointment.isLinked ? 
             <Tag color="blue" className="mr-2">Đã liên lịch</Tag> : 
-            <Tag color="default" className="mr-2">Chưa lên lịch</Tag>;
+            <Tag color="default" className="mr-2">Chưa xác nhận</Tag>;
 
         // Normalize status for checking
         const st = String(appointment.status || '').toUpperCase();

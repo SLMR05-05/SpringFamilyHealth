@@ -1,0 +1,31 @@
+services:
+  familyhealth-all-in-one:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: familyhealth-app
+    ports:
+      - "3306:3306"  # MySQL
+      - "8080:8080"  # Backend
+      - "5173:5173"  # Frontend
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=FamilyHealth
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/FamilyHealth?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - JWT_SIGNER_KEY=${JWT_SIGNER_KEY:-ANCf_8p1AE4ZQs7QuqGAyyfTEgYrKSjKWkhBk5cIn1_2QVr2jEjmM-1tu7EgnyOf_fAsvdFXva8Sv05iTGzETg}
+      - JWT_VALID_DURATION=3600
+      - JWT_REFRESHABLE_DURATION=36000
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  db-data:

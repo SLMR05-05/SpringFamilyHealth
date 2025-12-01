@@ -1,0 +1,48 @@
+# Docker-specific configuration
+server:
+    port: 8080
+
+spring:
+    datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: false
+        properties:
+            hibernate:
+                format_sql: true
+                dialect: org.hibernate.dialect.MySQLDialect
+    
+    security:
+        filter:
+            order: 10
+
+# JWT Configuration
+jwt:
+    signerKey: ${JWT_SIGNER_KEY}
+    valid-duration: ${JWT_VALID_DURATION:3600}
+    refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
+
+# Actuator for health checks
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info
+            base-path: /actuator
+    endpoint:
+        health:
+            show-details: when-authorized
+    health:
+        db:
+            enabled: true
+
+logging:
+    level:
+        root: INFO
+        com.example.backend: DEBUG

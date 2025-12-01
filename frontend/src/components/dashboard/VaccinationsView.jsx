@@ -16,11 +16,11 @@ export default function VaccinationsView({ vaccinations }) {
       {vaccinations.map((vaccination) => {
         const idKey = vaccination.vaccinationId || vaccination.vaccine_id || vaccination.id;
         const vaccineName = vaccination.vaccineName || vaccination.vaccine_name || vaccination.name || 'Vaccine';
-        const vaccinationDate = vaccination.vaccinationDate || vaccination.date_given || vaccination.date || null;
+        const vaccinationDate = vaccination.dateGiven || vaccination.vaccinationDate || vaccination.date_given || vaccination.date || null;
         const nextDose = vaccination.nextDose || vaccination.next_dose || null;
         const location = vaccination.location || null;
         const notes = vaccination.notes || vaccination.note || null;
-        const doctorRef = vaccination.doctorId || vaccination.doctor_id || null;
+        const doctorRef = vaccination.doctorName || vaccination.doctorId || vaccination.doctor_id || null;
 
         return (
           <div key={idKey} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">

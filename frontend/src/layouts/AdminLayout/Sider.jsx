@@ -1,6 +1,6 @@
 import { Drawer, Layout, Grid, Space } from "antd";
 import React from "react";
-import MenuCustom from "./menu";
+import MenuCustom from "./Menu";
 import logo from "../../assets/logo.png";
 
 

@@ -2,9 +2,9 @@ import React from "react";
 import AdminLayout from "../layouts/AdminLayout/index.jsx";
 import Loadable from "../components/Loadable";
 
-const DashboardPage = Loadable(React.lazy(() => import('../pages/admin/DashboardAdminPage')));
-const UsersPage = Loadable(React.lazy(() => import('../pages/admin/UserManaPage')));
-const DoctorsPage = Loadable(React.lazy(() => import('../pages/admin/DoctorManaPage')));
+const DashboardPage = Loadable(React.lazy(() => import('../pages/Admin/DashboardAdminPage')));
+const UsersPage = Loadable(React.lazy(() => import('../pages/Admin/UserManaPage')));
+const DoctorsPage = Loadable(React.lazy(() => import('../pages/Admin/DoctorManaPage')));
 const ReportPage = Loadable(React.lazy(() => import('../pages/Admin/ReportsPage.jsx')));
 
 

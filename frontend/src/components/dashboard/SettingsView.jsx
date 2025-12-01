@@ -119,37 +119,13 @@ export default function SettingsView({ onBack }) {
         const userObj = userStr2 ? JSON.parse(userStr2) : null;
         const userId = userObj?.userId || userObj?.id;
         if (userId) {
-          // Lấy thông tin member hiện tại để biết familyId và các trường cần giữ lại
-          const mresp = await memberApi.getById(Number(userId));
-          const mdata = mresp?.data || mresp?.result || mresp || null;
-          if (mdata) {
-            const payload = {
-              userId: Number(userId),
-              familyId: mdata.familyId || mdata.family?.familyId || null,
-              // preserve other fields if available
-              age: mdata.age || null,
-              dayOfBirth: mdata.dayOfBirth || null,
-              gender: mdata.gender || null,
-              weight: mdata.weight || null,
-              height: mdata.height || null,
-              relationship: mdata.relationship || null,
-              roleInFamily: mdata.roleInFamily || null,
-              phone: formData.phone || mdata.phone || null,
-              email: formData.email || mdata.email || null,
-              address: mdata.address || null
-            };
-
-            // Only attempt update if familyId is present (MemberUpdateRequest requires it)
-            if (payload.familyId) {
-              try {
-                await memberApi.update(Number(userId), payload);
-                console.debug('Member record updated with email/phone for userId', userId);
-              } catch (err) {
-                console.warn('Failed to update member record for userId', userId, err);
-              }
-            } else {
-              console.warn('Skipping member update: familyId missing for member', userId);
-            }
+          // Use PATCH /api/members/me to let the current user update their member contact info
+          // This endpoint reads userId from JWT and doesn't require admin role.
+          try {
+            await memberApi.updateMe({ phone: formData.phone || null, email: formData.email || null });
+            console.debug('Member record patched with email/phone for userId', userId);
+          } catch (err) {
+            console.warn('Failed to patch member record for userId', userId, err);
           }
         }
       } catch (err) {
