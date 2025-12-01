@@ -16,8 +16,9 @@ import StatCard from '../components/dashboard/StatCard';
 import MembersView from '../components/dashboard/MembersView';
 import RecordsView from '../components/dashboard/RecordsView';
 import AppointmentsView from '../components/dashboard/AppointmentsView';
-import NotificationsView from '../components/dashboard/NotificationsView';
+import VaccinationsView from '../components/dashboard/VaccinationsView';
 import NotificationDropdown from '../components/NotificationDropdown';
+import vaccinationApi from '../api/vaccinationApi';
 
 export default function FamilyDashboard() {
   const { t, i18n } = useTranslation();
@@ -29,6 +30,7 @@ export default function FamilyDashboard() {
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [visitHistory, setVisitHistory] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [vaccinations, setVaccinations] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [familyId, setFamilyId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -171,6 +173,11 @@ export default function FamilyDashboard() {
             
             const prescriptionData = prescriptionResponse?.data || prescriptionResponse?.result || prescriptionResponse || [];
             setPrescriptions(Array.isArray(prescriptionData) ? prescriptionData : []);
+
+            // Fetch vaccinations for the same member
+            const vaccinationResponse = await vaccinationApi.getByMemberId(memberIdNumber);
+            const vaccinationData = vaccinationResponse?.data || vaccinationResponse?.result || vaccinationResponse || [];
+            setVaccinations(Array.isArray(vaccinationData) ? vaccinationData : []);
           }
         }
       } catch (error) {
@@ -178,6 +185,7 @@ export default function FamilyDashboard() {
         setMedicalRecords([]);
         setVisitHistory([]);
         setPrescriptions([]);
+        setVaccinations([]);
       }
     };
 
@@ -261,7 +269,7 @@ export default function FamilyDashboard() {
     { id: 'members', label: t('Dashboard.Tabs.Members'), icon: Users },
     { id: 'records', label: t('Dashboard.Tabs.Records'), icon: Heart },
     { id: 'appointments', label: t('Dashboard.Tabs.Appointments'), icon: Calendar },
-    { id: 'notifications', label: t('Dashboard.Tabs.Notifications'), icon: Bell }
+    { id: 'vaccinations', label: 'Tiêm chủng', icon: Bell }
   ];
 
   return (
@@ -384,7 +392,7 @@ export default function FamilyDashboard() {
                 />
               )}
               {activeTab === 'appointments' && <AppointmentsView appointments={appointments} />}
-              {activeTab === 'notifications' && <NotificationsView notifications={notifications} />}
+              {activeTab === 'vaccinations' && <VaccinationsView vaccinations={vaccinations} />}
             </div>
           </div>
         )}

@@ -30,16 +30,19 @@ public class PrescriptionController {
     private final PrescriptionMedicationService prescriptionMedicationService;
     private final AppointmentService appointmentService;
     private final DoctorService doctorService;
+    private final com.example.backend.service.MedicationService medicationService;
     
     public PrescriptionController(PrescriptionService service, MemberService memberService, 
                                 PrescriptionMedicationService prescriptionMedicationService,
                                 AppointmentService appointmentService,
-                                DoctorService doctorService) {
+                                DoctorService doctorService,
+                                com.example.backend.service.MedicationService medicationService) {
         this.service = service;
         this.memberService = memberService;
         this.prescriptionMedicationService = prescriptionMedicationService;
         this.appointmentService = appointmentService;
         this.doctorService = doctorService;
+        this.medicationService = medicationService;
     }
 
     @GetMapping
@@ -161,6 +164,26 @@ public class PrescriptionController {
         entity.setPrescribedAt(LocalDateTime.now());
         
         Prescription created = service.create(entity);
+        // Persist prescription medications if provided
+        if (req.getMedications() != null && !req.getMedications().isEmpty()) {
+            for (PrescriptionCreateRequest.PrescriptionMedicationRequest mr : req.getMedications()) {
+                try {
+                    PrescriptionMedication pm = new PrescriptionMedication();
+                    pm.setPrescription(created);
+                    if (mr.getMedicationId() != null) {
+                        pm.setMedication(medicationService.findById(mr.getMedicationId()));
+                    } else if (mr.getName() != null && !mr.getName().isEmpty()) {
+                        pm.setMedication(medicationService.findOrCreateByName(mr.getName()));
+                    }
+                    pm.setDosage(mr.getDosage());
+                    pm.setDuration(mr.getDuration());
+                    prescriptionMedicationService.create(pm);
+                } catch (Exception e) {
+                    // Log and continue with other medications (do not fail entire request)
+                    System.err.println("Failed to save prescription medication: " + e.getMessage());
+                }
+            }
+        }
         return ApiResponse.<PrescriptionResponse>builder()
                 .result(toResponse(created))
                 .build();

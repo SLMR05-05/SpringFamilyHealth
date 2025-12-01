@@ -25,7 +25,7 @@ public class VaccinationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<VaccinationResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<VaccinationResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -33,11 +33,18 @@ public class VaccinationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<VaccinationResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<VaccinationResponse>builder()
                 .result(toResponse(service.findById(id)))
                 .build();
+    }
+
+    @GetMapping("/member/{memberId}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
+    public ApiResponse<java.util.List<VaccinationResponse>> getByMemberId(@PathVariable Integer memberId) {
+        java.util.List<VaccinationResponse> list = service.findByMemberId(memberId).stream().map(this::toResponse).toList();
+        return ApiResponse.<java.util.List<VaccinationResponse>>builder().result(list).build();
     }
 
     @PostMapping

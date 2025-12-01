@@ -70,7 +70,7 @@ const HorizontalLayout = () => {
             {/* 3. ẨN KPI SECTION VÀ SIDER KHI CHƯA CHỌN GIA ĐÌNH */}
             {isFamilySelected && (
                 <>
-                    <KPIDashboardSection className="py-4" />
+                    <KPIDashboardSection className="py-4" selectedFamily={selectedFamily} />
                     <ReponsiveSider />
                 </>
             )}

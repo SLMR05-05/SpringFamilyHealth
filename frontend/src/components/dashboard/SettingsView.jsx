@@ -3,6 +3,7 @@ import { ArrowLeft, User, Phone, Lock, Mail, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { message as antdMessage } from 'antd';
 import userApi from '../../api/userApi';
+import memberApi from '../../api/memberApi';
 
 export default function SettingsView({ onBack }) {
   const { t } = useTranslation();
@@ -112,6 +113,48 @@ export default function SettingsView({ onBack }) {
       setIsSaved(true);
       antdMessage.success('Đã cập nhật thông tin tài khoản');
       setTimeout(() => setIsSaved(false), 3000);
+      // Đồng bộ phone/email vào bảng Member (nếu tồn tại). Giả định memberId == userId
+      try {
+        const userStr2 = localStorage.getItem('user');
+        const userObj = userStr2 ? JSON.parse(userStr2) : null;
+        const userId = userObj?.userId || userObj?.id;
+        if (userId) {
+          // Lấy thông tin member hiện tại để biết familyId và các trường cần giữ lại
+          const mresp = await memberApi.getById(Number(userId));
+          const mdata = mresp?.data || mresp?.result || mresp || null;
+          if (mdata) {
+            const payload = {
+              userId: Number(userId),
+              familyId: mdata.familyId || mdata.family?.familyId || null,
+              // preserve other fields if available
+              age: mdata.age || null,
+              dayOfBirth: mdata.dayOfBirth || null,
+              gender: mdata.gender || null,
+              weight: mdata.weight || null,
+              height: mdata.height || null,
+              relationship: mdata.relationship || null,
+              roleInFamily: mdata.roleInFamily || null,
+              phone: formData.phone || mdata.phone || null,
+              email: formData.email || mdata.email || null,
+              address: mdata.address || null
+            };
+
+            // Only attempt update if familyId is present (MemberUpdateRequest requires it)
+            if (payload.familyId) {
+              try {
+                await memberApi.update(Number(userId), payload);
+                console.debug('Member record updated with email/phone for userId', userId);
+              } catch (err) {
+                console.warn('Failed to update member record for userId', userId, err);
+              }
+            } else {
+              console.warn('Skipping member update: familyId missing for member', userId);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Member sync error', err);
+      }
     } catch (error) {
       console.error('Failed to update profile:', error);
       antdMessage.error('Không thể cập nhật thông tin. Vui lòng thử lại.');

@@ -1,7 +1,7 @@
 // ScheduleModal.jsx (Đã tối ưu hóa hiển thị dữ liệu và sử dụng hàm ánh xạ trạng thái)
 
-import React, { useState } from 'react';
-import { Typography, Card, Button, Row, Col, Calendar, Space, Modal, Badge, List } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Typography, Card, Button, Row, Col, Calendar, Space, Modal, Badge, List, Spin } from 'antd';
 import { LeftOutlined, RightOutlined, CalendarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs'; 
 import weekOfYear from 'dayjs/plugin/weekOfYear'; 
@@ -13,68 +13,52 @@ dayjs.extend(customParseFormat);
 dayjs.locale('vi'); 
 
 const { Title, Text } = Typography;
+import appointmentApi from '../../api/appointmentApi';
+import { useAuth } from '../../context/AuthProvider';
 
-// --- Dữ liệu lịch khám giả lập ---
-const scheduleData = [
-    { date: '2025-11-28', time: '10:00', name: 'Nguyễn Văn An', type: 'Khám tổng quát' },
-    { date: '2025-11-28', time: '15:30', name: 'Trần Thị Bích', type: 'Tái khám' },
-    { date: '2025-11-29', time: '09:00', name: 'Lê Văn Cường', type: 'Tiêm phòng cúm' },
-    { date: '2025-11-29', time: '11:00', name: 'Phạm Thị Duyên', type: 'Khám tổng quát' },
-    { date: '2025-12-05', time: '14:00', name: 'Vũ Đình Đức', type: 'Khám định kỳ' },
-    { date: '2025-12-05', time: '16:00', name: 'Mai Thu Hiền', type: 'X-quang' },
-];
+// scheduleData will be loaded from API for the logged-in doctor
+// each item shape: { date: 'YYYY-MM-DD', time: 'HH:mm', name, type }
 
-// --- Hàm ánh xạ loại cuộc hẹn sang trạng thái (status) và màu sắc ---
-const getScheduleStatus = (type) => {
-    // Sử dụng status và màu sắc để định dạng
-    if (type.includes('Khám tổng quát')) return { status: 'processing', color: '#1890ff', description: 'Khám TQ' };
-    if (type.includes('Tái khám')) return { status: 'success', color: '#52c41a', description: 'Tái khám' };
-    if (type.includes('Tiêm phòng')) return { status: 'warning', color: '#faad14', description: 'Tiêm phòng' };
-    if (type.includes('X-quang')) return { status: 'error', color: '#ff4d4f', description: 'X-quang' };
-    if (type.includes('Khám định kỳ')) return { status: 'default', color: '#7cb305', description: 'Khám ĐK' };
-    return { status: 'default', color: '#999', description: 'Khác' };
+// --- Hàm ánh xạ loại cuộc hẹn/ly do sang trạng thái (status), màu sắc và mô tả ---
+const getScheduleStatus = (text = '', raw = {}) => {
+    // text có thể gồm cả `type` và `reason` từ appointment
+    const t = String(text || '').toLowerCase();
+    const statusFromAppointment = (raw && raw.status) ? String(raw.status).toUpperCase() : null;
+
+    // Nếu backend đã cung cấp status, ưu tiên dùng nó để xác định màu
+    if (statusFromAppointment) {
+        switch (statusFromAppointment) {
+            case 'COMPLETED': return { status: 'success', color: '#52c41a', description: 'Hoàn thành' };
+            case 'SCHEDULED': return { status: 'processing', color: '#1890ff', description: 'Đã đặt lịch' };
+            case 'CANCELLED': return { status: 'default', color: '#999', description: 'Đã hủy' };
+            case 'NO_SHOW': return { status: 'warning', color: '#faad14', description: 'Vắng mặt' };
+            case 'CONFIRMED': return { status: 'processing', color: '#096dd9', description: 'Đã xác nhận' };
+            default: break;
+        }
+    }
+
+    // Khớp theo từ khóa trong type/reason
+    if (t.includes('tái') || t.includes('tái khám')) return { status: 'success', color: '#52c41a', description: 'Tái khám' };
+    if (t.includes('siêu âm') || t.includes('thai') || t.includes('khám thai')) return { status: 'processing', color: '#722ed1', description: 'Khám thai' };
+    if (t.includes('tiêm') || t.includes('vắc') || t.includes('vaccine')) return { status: 'warning', color: '#faad14', description: 'Tiêm phòng' };
+    if (t.includes('x-quang') || t.includes('xquang') || t.includes('x ray') || t.includes('xray')) return { status: 'error', color: '#ff4d4f', description: 'X-quang' };
+    if (t.includes('định kỳ') || t.includes('khám định kỳ') || t.includes('định kỳ')) return { status: 'processing', color: '#7cb305', description: 'Khám định kỳ' };
+    if (t.includes('ho') || t.includes('sốt') || t.includes('cảm') || t.includes('đau')) return { status: 'default', color: '#fa8c16', description: 'Khám bệnh' };
+
+    // Mặc định
+    return { status: 'default', color: '#999', description: (raw && raw.reason) ? (String(raw.reason).slice(0,30) + (String(raw.reason).length>30? '...':'')) : 'Khác' };
 };
 
 // --- Hàm lấy dữ liệu cho từng ngày (Dùng chung) ---
-const getListData = (value) => {
+const getListData = (value, data) => {
     const dateKey = value.format('YYYY-MM-DD');
-    const listData = scheduleData.filter(item => item.date === dateKey);
+    const listData = (data || []).filter(item => item.date === dateKey);
     // Sắp xếp dữ liệu theo thời gian
     listData.sort((a, b) => (a.time > b.time ? 1 : -1));
     return listData;
 };
 
-// --- Hàm render nội dung cho từng ô ngày (Dùng cho Month View) ---
-const dateCellRender = (value) => {
-    const listData = getListData(value);
-
-    return (
-        <ul className="events-list p-0 m-0 list-none">
-            {listData.map((item, index) => {
-                const { status, color, description } = getScheduleStatus(item.type);
-                if (index >= 2) return null; 
-
-                return (
-                    <li key={item.date + item.time} className="text-xs truncate" title={`${item.time} - ${item.name}: ${item.type}`}>
-                        <Badge 
-                            status={status} 
-                            text={
-                                <Text className="text-xs" style={{ color }}>
-                                    {item.time} - {description}
-                                </Text>
-                            }
-                        />
-                    </li>
-                );
-            })}
-            {listData.length > 2 && (
-                 <li key="more" className="text-xs text-blue-500 font-medium pt-1">
-                     +{listData.length - 2} sự kiện khác
-                 </li>
-            )}
-        </ul>
-    );
-};
+// Note: month cell render will be provided inline in ScheduleModal so it can access events state
 
 // --- Custom Header cho Month View (Chuyển theo Tháng) ---
 const MonthViewHeader = ({ value, onChange }) => {
@@ -100,7 +84,7 @@ const MonthViewHeader = ({ value, onChange }) => {
 };
 
 // --- Component Lịch theo Tuần (Week View) ---
-const WeekView = ({ currentDate, setCurrentDate }) => {
+const WeekView = ({ currentDate, setCurrentDate, onEventClick, events = [] }) => {
     const startOfWeek = currentDate.startOf('week'); 
     const daysInWeek = [...Array(7)].map((_, i) => startOfWeek.add(i, 'day'));
     const displayRange = `${startOfWeek.format('DD/MM/YYYY')} - ${startOfWeek.add(6, 'day').format('DD/MM/YYYY')}`;
@@ -128,7 +112,7 @@ const WeekView = ({ currentDate, setCurrentDate }) => {
             {/* Khung chứa 7 ngày */}
             <Row gutter={[16, 16]}>
                 {daysInWeek.map((day) => {
-                    const listData = getListData(day);
+                    const listData = getListData(day, events);
                     const isToday = day.isSame(dayjs(), 'day');
 
                     return (
@@ -151,22 +135,19 @@ const WeekView = ({ currentDate, setCurrentDate }) => {
                                 size="small"
                                 dataSource={listData}
                                 renderItem={(item) => {
-                                    const { status, color } = getScheduleStatus(item.type);
+                                    // show time + reason (no status), but apply color by reason
+                                    const reasonText = (item.raw && (item.raw.reason || item.raw.description)) || item.type || '';
+                                    const { color } = getScheduleStatus(`${item.type || ''} ${item.raw?.reason || ''}`, item.raw);
                                     return (
-                                        <List.Item className="p-0 border-b-0" title={`${item.time} - ${item.name}`}>
-                                            <Badge 
-                                                status={status} 
-                                                text={
-                                                    <div className="text-left w-full">
-                                                        <Text strong className="text-xs block" style={{ color }}>
-                                                            {item.time} - {item.name}
-                                                        </Text>
-                                                        <Text type="secondary" className="text-xs block">
-                                                            {item.type}
-                                                        </Text>
-                                                    </div>
-                                                }
-                                            />
+                                        <List.Item 
+                                            className="p-1 border-b-0 cursor-pointer hover:bg-gray-50" 
+                                            title={`${item.time} - ${reasonText}`} 
+                                            onClick={() => onEventClick && onEventClick(item)}
+                                        >
+                                            <div className="text-left w-full whitespace-normal break-words">
+                                                <Text strong className="block" style={{ lineHeight: 1.2, color: color }}>{item.time}</Text>
+                                                <Text type="secondary" className="block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word' }}>{reasonText}</Text>
+                                            </div>
                                         </List.Item>
                                     );
                                 }}
@@ -182,13 +163,84 @@ const WeekView = ({ currentDate, setCurrentDate }) => {
 
 
 // --- Component chính (Modal) ---
-const ScheduleModal = ({ open, onCancel, ...props }) => { 
+const ScheduleModal = ({ open, onCancel, onEventClick }) => { 
+    const { user } = useAuth();
     const [viewMode, setViewMode] = useState('month');
     const [currentDate, setCurrentDate] = useState(dayjs()); 
+    const [events, setEvents] = useState([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
 
     const handleCalendarChange = (date) => {
         setCurrentDate(date); 
     };
+
+    useEffect(() => {
+        // load events for current month when modal opens or month changes
+        const loadEvents = async () => {
+            if (!open || !user || !user.userId) return;
+            setLoadingEvents(true);
+            try {
+                const start = currentDate.startOf('month').toDate();
+                const end = currentDate.endOf('month').toDate();
+                // The Doctor entity maps its id to User id (MapsId), so doctorId == user.userId
+                const doctorIdToUse = user.userId;
+                const resp = await appointmentApi.getByDateRange(doctorIdToUse, start, end);
+                let items = resp?.data || resp?.result || resp || [];
+                if (items && items.data && Array.isArray(items.data)) items = items.data;
+                if (resp?.data && resp.data.content && Array.isArray(resp.data.content)) items = resp.data.content;
+
+                // Debug: inspect returned items to determine doctor id shape
+                try {
+                    console.debug('ScheduleModal: fetched appointments count', Array.isArray(items) ? items.length : 'not-array', items?.slice?.(0,5));
+                    console.log('ScheduleModal: raw items (first 20)', Array.isArray(items) ? items.slice(0,20) : items);
+                } catch (logErr) {
+                    // ignore logging errors
+                    console.warn('ScheduleModal debug log failed', logErr);
+                }
+
+                // Filter appointments to only those assigned to the logged-in doctor (user.userId)
+                const filteredItems = (items || []).filter(it => {
+                    try {
+                        const docId = it.doctorId || (it.doctor && (it.doctor.doctorId || it.doctor.id)) || (it.doctor && it.doctor.user && (it.doctor.user.userId || it.doctor.user.id));
+                        // Debug per-item docId
+                        try { console.debug('ScheduleModal: item docId resolved', docId, 'item:', it); } catch (logErr) { console.warn('ScheduleModal per-item log failed', logErr); }
+                        if (docId == null) return false;
+                        return String(docId) === String(user.userId);
+                    } catch {
+                        return false;
+                    }
+                });
+                try {
+                    console.log('ScheduleModal: filteredItems (first 20)', filteredItems.slice(0,20));
+                    console.debug('ScheduleModal: filtered count', filteredItems.length);
+                } catch (logErr) {
+                    console.warn('ScheduleModal filtered log failed', logErr);
+                }
+
+                const mapped = (filteredItems || []).map(it => {
+                    const possibleDate = it.appointment_date || it.appointmentDate || it.appointmentAt || it.startTime || it.start_at || it.start || it.date || it.appointment_datetime || it.appointmentDatetime || it.startTime;
+                    let timeStr = '';
+                    try {
+                        if (possibleDate) timeStr = dayjs(possibleDate).isValid() ? dayjs(possibleDate).format('HH:mm') : String(possibleDate).slice(11,16);
+                        else if (it.time) timeStr = it.time;
+                    } catch { timeStr = it.time || ''; }
+
+                    const name = it.patientName || it.patient?.fullName || it.memberName || it.member?.fullName || it.name || it.fullName || 'Không rõ';
+                    const dateKey = possibleDate ? dayjs(possibleDate).format('YYYY-MM-DD') : (it.date ? dayjs(it.date).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'));
+                    return { date: dateKey, time: timeStr, name, type: it.type || it.reason || 'Khám bệnh', raw: it };
+                });
+
+                setEvents(mapped);
+            } catch (e) {
+                console.warn('Failed to load schedule events', e);
+                setEvents([]);
+            } finally {
+                setLoadingEvents(false);
+            }
+        };
+
+        loadEvents();
+    }, [open, currentDate, user]);
 
     return (
         <Modal
@@ -226,20 +278,58 @@ const ScheduleModal = ({ open, onCancel, ...props }) => {
 
                 {/* 2. CALENDAR VIEW */}
                 <Card className="shadow-none border-none h-full p-0">
-                    {viewMode === 'month' ? (
+                    {loadingEvents ? (
+                        <div className="py-8 text-center"><Spin /></div>
+                    ) : (
+                        viewMode === 'month' ? (
                         <Calendar 
                             mode="month"
                             value={currentDate}
                             onChange={handleCalendarChange}
                             headerRender={MonthViewHeader}
-                            dateCellRender={dateCellRender} 
+                            dateCellRender={(value) => {
+                                const listData = getListData(value, events);
+                                return (
+                                    <ul className="events-list p-0 m-0 list-none">
+                                        {listData.map((item, index) => {
+                                            // show time + reason (no status badge) but keep color by reason
+                                            if (index >= 2) return null;
+                                            const reasonText = (item.raw && (item.raw.reason || item.raw.description)) || item.type || '';
+                                            const { color } = getScheduleStatus(`${item.type || ''} ${item.raw?.reason || ''}`, item.raw);
+                                            return (
+                                                <li
+                                                    key={item.date + item.time}
+                                                    className="text-sm cursor-pointer hover:bg-gray-50 p-1"
+                                                    title={`${item.time} - ${reasonText}`}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => onEventClick && onEventClick(item)}
+                                                >
+                                                    <div className="text-left w-full whitespace-normal break-words">
+                                                        <Text strong className="block" style={{ lineHeight: 1.2, color: color }}>{item.time}</Text>
+                                                        <Text type="secondary" className="block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word' }}>{reasonText}</Text>
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                        {listData.length > 2 && (
+                                            <li key="more" className="text-xs text-blue-500 font-medium pt-1">
+                                                +{listData.length - 2} sự kiện khác
+                                            </li>
+                                        )}
+                                    </ul>
+                                );
+                            }}
                             className="custom-month-calendar" 
                         />
-                    ) : (
-                        <WeekView 
-                            currentDate={currentDate} 
-                            setCurrentDate={setCurrentDate}
-                        />
+                        ) : (
+                            <WeekView 
+                                currentDate={currentDate} 
+                                setCurrentDate={setCurrentDate}
+                                onEventClick={onEventClick}
+                                events={events}
+                            />
+                        )
                     )}
                 </Card>
             </div>

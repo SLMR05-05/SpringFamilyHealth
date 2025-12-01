@@ -32,6 +32,13 @@ public class VisitHistoryController {
                 .build();
     }
 
+    @GetMapping("/member/{memberId}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
+    public ApiResponse<java.util.List<VisitHistoryResponse>> getByMemberId(@PathVariable Integer memberId) {
+        java.util.List<VisitHistoryResponse> list = service.findByMemberId(memberId).stream().map(this::toResponse).toList();
+        return ApiResponse.<java.util.List<VisitHistoryResponse>>builder().result(list).build();
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<VisitHistoryResponse> getById(@PathVariable Integer id) {

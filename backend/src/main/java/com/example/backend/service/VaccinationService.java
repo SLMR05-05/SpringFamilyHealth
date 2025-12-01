@@ -22,6 +22,11 @@ public class VaccinationService {
     public Page<Vaccination> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Transactional(readOnly = true)
+    public java.util.List<Vaccination> findByMemberId(Integer memberId) {
+        return repo.findByMemberMemberId(memberId);
+    }
+
+    @Transactional(readOnly = true)
     public Vaccination findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("Vaccination not found: " + id)); }
 
     @Transactional

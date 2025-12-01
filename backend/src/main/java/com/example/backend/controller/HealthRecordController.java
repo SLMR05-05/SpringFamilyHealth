@@ -22,7 +22,7 @@ public class HealthRecordController {
     public HealthRecordController(HealthRecordService service, MemberService memberService) { this.service = service; this.memberService = memberService; }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<HealthRecordResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<HealthRecordResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -30,7 +30,7 @@ public class HealthRecordController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<HealthRecordResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<HealthRecordResponse>builder()
                 .result(toResponse(service.findById(id)))
@@ -38,7 +38,7 @@ public class HealthRecordController {
     }
 
     @GetMapping("/member/{memberId}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<HealthRecordResponse> getByMemberId(@PathVariable Integer memberId) {
         try {
             HealthRecord hr = service.findByMemberId(memberId);

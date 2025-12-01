@@ -90,7 +90,7 @@ public class FamilyController {
     }
 
     @GetMapping("/{id}/dashboard")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<FamilyDashboardResponse> getDashboard(@PathVariable Integer id) {
         Family family = service.findById(id);
         FamilyDashboardResponse response = new FamilyDashboardResponse();
@@ -229,7 +229,7 @@ public class FamilyController {
     }
 
     @GetMapping("/{id}/medical-records")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<List<FamilyDashboardResponse.MedicalRecordInfo>> getMedicalRecords(@PathVariable Integer id) {
         Family family = service.findById(id);
         

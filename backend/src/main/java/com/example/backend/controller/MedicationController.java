@@ -20,7 +20,7 @@ public class MedicationController {
     public MedicationController(MedicationService service) { this.service = service; }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<Page<MedicationResponse>> getAll(Pageable pageable) {
         return ApiResponse.<Page<MedicationResponse>>builder()
                 .result(service.findAll(pageable).map(this::toResponse))
@@ -28,7 +28,7 @@ public class MedicationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<MedicationResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<MedicationResponse>builder()
                 .result(toResponse(service.findById(id)))

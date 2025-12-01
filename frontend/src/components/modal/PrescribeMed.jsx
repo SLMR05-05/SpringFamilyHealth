@@ -1,8 +1,9 @@
     // PrescribeMed.jsx
-    import React, { useState } from 'react';
+    import React, { useState, useEffect } from 'react';
     import { 
-        Typography, Input, Button, Card, Divider, Row, Col, Tag, List, Empty 
+        Typography, Input, Button, Card, Divider, Row, Col, Tag, List, Empty, Spin, Select
     } from 'antd';
+    import { message } from 'antd';
     import { 
         PlusOutlined, SearchOutlined, FileTextOutlined, HeartFilled, 
         MinusCircleOutlined 
@@ -10,23 +11,22 @@
 
     const { Text, Title } = Typography;
     const { TextArea } = Input;
+    const { Option } = Select;
+
+    const DOSE_OPTIONS = ['1 viên', '2 viên', '3 viên', '5 ml', '10 ml'];
+    const FREQ_OPTIONS = ['1 lần/ngày', '2 lần/ngày', '3 lần/ngày', 'Sáng', 'Trưa', 'Tối'];
+    const DURATION_OPTIONS = ['3 ngày', '5 ngày', '7 ngày', '10 ngày', '14 ngày'];
 
     // --- DỮ LIỆU MẪU ---
-    const popularMedications = [
-        { name: 'Paracetamol 500mg', usage: 'Giảm đau - Hạ sốt', category: 'Thuốc giảm đau, hạ sốt' },
-        { name: 'Amoxicillin 500mg', usage: 'Kháng sinh điều trị nhiễm khuẩn', category: 'Kháng sinh' },
-        { name: 'Amlodipine 5mg', usage: 'Thuốc điều trị tăng huyết áp', category: 'Tim mạch' },
-        { name: 'Omeprazole 20mg', usage: 'Giảm tiết acid dạ dày', category: 'Tiêu hóa' },
-        { name: 'Vitamin C', usage: 'Bổ sung vitamin', category: 'Vitamin' },
-    ];
+    // will be loaded from API
+    // const popularMedications = [];
+    import medicationApi from '../../api/medicationApi';
+    import prescriptionApi from '../../api/prescriptionApi';
+    import { useAuth } from '../../context/AuthProvider';
 
     // --- Sub-component cho từng thuốc trong đơn ---
-    const PrescriptionItem = ({ medication, index, onRemove }) => {
-        // Sử dụng state cục bộ để quản lý liều lượng, tần suất, thời gian dùng
-        const [dose, setDose] = useState('1 viên');
-        const [freq, setFreq] = useState('1 lần/ngày');
-        const [duration, setDuration] = useState('7 ngày');
-
+    const PrescriptionItem = ({ medication, index, onRemove, onChange }) => {
+        // controlled component: values come from medication prop
         return (
             <div className="py-3 border-b border-gray-100">
                 <div className="flex justify-between items-center mb-2">
@@ -42,29 +42,39 @@
                 </div>
                 
                 <div className="grid grid-cols-3 gap-3">
-                    <Input 
-                        placeholder="Liều dùng" 
-                        value={dose} 
-                        onChange={(e) => setDose(e.target.value)} 
-                        addonBefore="Liều" 
-                    />
-                    <Input 
-                        placeholder="Tần suất" 
-                        value={freq} 
-                        onChange={(e) => setFreq(e.target.value)} 
-                        addonBefore="Tần suất" 
-                    />
-                    <Input 
-                        placeholder="Thời gian" 
-                        value={duration} 
-                        onChange={(e) => setDuration(e.target.value)} 
-                        addonBefore="Thời gian" 
-                    />
+                    <Select
+                        value={medication.dose}
+                        onChange={(val) => onChange(index, 'dose', val)}
+                        style={{ width: '100%' }}
+                        placeholder="Liều"
+                    >
+                        {DOSE_OPTIONS.map(opt => <Option key={opt} value={opt}>{opt}</Option>)}
+                    </Select>
+
+                    <Select
+                        value={medication.freq}
+                        onChange={(val) => onChange(index, 'freq', val)}
+                        style={{ width: '100%' }}
+                        placeholder="Tần suất"
+                    >
+                        {FREQ_OPTIONS.map(opt => <Option key={opt} value={opt}>{opt}</Option>)}
+                    </Select>
+
+                    <Select
+                        value={medication.duration}
+                        onChange={(val) => onChange(index, 'duration', val)}
+                        style={{ width: '100%' }}
+                        placeholder="Thời gian"
+                    >
+                        {DURATION_OPTIONS.map(opt => <Option key={opt} value={opt}>{opt}</Option>)}
+                    </Select>
                 </div>
                 <TextArea 
                     placeholder="Hướng dẫn sử dụng chi tiết (sau ăn, trước ngủ...)" 
                     rows={1} 
                     className="mt-2"
+                    value={medication.instructions}
+                    onChange={(e) => onChange(index, 'instructions', e.target.value)}
                 />
             </div>
         );
@@ -76,14 +86,32 @@
         const [diagnosis, setDiagnosis] = useState('');
         const [prescribedList, setPrescribedList] = useState([]);
         const [notes, setNotes] = useState('');
+        const [popularMedications, setPopularMedications] = useState([]);
+        const [loadingMeds, setLoadingMeds] = useState(false);
+        const [saving, setSaving] = useState(false);
+
+        // get current user (doctor) id if available
+        const { user } = useAuth();
 
         // Hàm thêm thuốc vào đơn
         const handleAddMedication = (med) => {
-            // Chỉ thêm nếu thuốc chưa có trong danh sách
-            if (!prescribedList.find(p => p.name === med.name)) {
-                // Thêm thuộc tính nhận dạng duy nhất (dùng timestamp) để key không bị trùng
-                setPrescribedList([...prescribedList, { ...med, id: Date.now() + Math.random() }]);
+            // avoid duplicates by medication id or name
+            if (!prescribedList.find(p => p.medicationId === med.id || p.name === med.name)) {
+                const newItem = {
+                    id: Date.now() + Math.random(),
+                    medicationId: med.id || null,
+                    name: med.name,
+                    dose: '1 viên',
+                    freq: '1 lần/ngày',
+                    duration: '7 ngày',
+                    instructions: ''
+                };
+                setPrescribedList(prev => [...prev, newItem]);
             }
+        };
+
+        const handleChangeMedication = (index, field, value) => {
+            setPrescribedList(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it));
         };
 
         // Hàm xóa thuốc khỏi đơn
@@ -92,9 +120,80 @@
             setPrescribedList(newList);
         };
 
+        // load medications from API
+        useEffect(() => {
+            const loadMeds = async () => {
+                setLoadingMeds(true);
+                try {
+                    const resp = await medicationApi.getAll(0, 50);
+                    console.debug('medicationApi.getAll response:', resp);
+                    let items = resp?.data || resp?.result || resp || [];
+                    if (items && items.data && Array.isArray(items.data)) items = items.data;
+                    if (resp?.data && resp.data.content && Array.isArray(resp.data.content)) items = resp.data.content;
+                    // normalize to array
+                    if (!Array.isArray(items)) {
+                        console.warn('medicationApi returned non-array items', items);
+                        items = [];
+                    }
+                    // Map backend DTO to frontend fields (medicationName -> name, medicationId -> id)
+                    const normalized = (items || []).map(it => ({
+                        id: it.medicationId || it.id || null,
+                        name: it.medicationName || it.medication_name || it.name || it.medName || '',
+                        usage: it.usage || it.description || it.category || ''
+                    }));
+                    setPopularMedications(normalized);
+                } catch (e) {
+                    console.warn('Failed to load medications', e);
+                    setPopularMedications([]);
+                } finally { setLoadingMeds(false); }
+            };
+            loadMeds();
+        }, []);
+
+        const handleSavePrescription = async () => {
+            if (!diagnosis || prescribedList.length === 0) {
+                message.error('Vui lòng nhập chẩn đoán và ít nhất 1 thuốc');
+                return;
+            }
+            const memberId = data.id || data.memberId || data.userId || null;
+            if (!memberId) {
+                message.error('Không xác định bệnh nhân');
+                return;
+            }
+
+            // Map frontend fields to backend DTO expected names:
+            // - backend expects `note` (not `notes` or `diagnosis`)
+            // - prescription medication expects `dosage` (not `dose`)
+            const noteValue = diagnosis ? (diagnosis + (notes ? '\n' + notes : '')) : (notes || '');
+                const payload = {
+                memberId,
+                doctorId: user?.userId || null,
+                note: noteValue,
+                medications: prescribedList.map(m => ({
+                    medicationId: m.medicationId,
+                    name: m.name,
+                    // Gộp liều và tần suất vào trường `dosage` (ví dụ: "1 viên | 2 lần/ngày")
+                    dosage: `${m.dose || m.dosage || ''}${m.freq ? ' | ' + m.freq : ''}`,
+                    duration: m.duration,
+                    // include other fields if backend later supports them
+                    instructions: m.instructions
+                }))
+            };
+
+                try {
+                    setSaving(true);
+                    await prescriptionApi.create(payload);
+                    message.success('Lưu đơn thuốc thành công');
+                // reset form
+                setDiagnosis(''); setPrescribedList([]); setNotes('');
+            } catch (e) {
+                console.error('Failed to save prescription', e);
+                message.error('Không lưu được đơn thuốc');
+            } finally { setSaving(false); }
+        };
+
         // Lấy dữ liệu bệnh nhân (dùng dữ liệu props từ PatientRecordModal)
         const data = patientData || {};
-        const medicalInfo = data.medicalInfo || {};
         const canSubmit = diagnosis && prescribedList.length > 0;
 
         return (
@@ -105,40 +204,50 @@
                     <Col span={6}>
                         
 
-                        <Card title={<Text strong>Thuốc phổ biến</Text>}>
+                        <Card title={<Text strong>Danh sách thuốc</Text>}>
                             <Input 
                                 placeholder="Tìm kiếm thuốc..." 
                                 prefix={<SearchOutlined className="mr-2" />} 
                                 className="mb-3"
                             />
-                            <div className="max-h-60 overflow-y-auto"> {/* Thêm cuộn cho danh sách thuốc phổ biến */}
-                                <List
-                                    size="small"
-                                    itemLayout="horizontal"
-                                    dataSource={popularMedications}
-                                    renderItem={(item) => (
-                                        <List.Item 
-                                            actions={[
-                                                <Button 
-                                                    icon={<PlusOutlined />} 
-                                                    type="text" 
-                                                    className="text-green-600"
-                                                    onClick={() => handleAddMedication(item)}
-                                                    key="add"
-                                                />,
-                                            ]}
-                                            className="p-2 hover:bg-gray-100 cursor-pointer"
-                                        >
-                                            <List.Item.Meta
-                                                title={<Text strong className="text-sm">{item.name}</Text>}
-                                                description={
-                                                    <Text type="secondary" className="text-xs italic text-gray-500">{item.usage}</Text>
-                                                }
-                                            />
-                                        </List.Item>
-                                    )}
-                                />
-                            </div>
+                                    <div className="max-h-60 overflow-y-auto"> {/* Thêm cuộn cho danh sách thuốc phổ biến */}
+                                        {loadingMeds ? (
+                                            <div className="py-4 text-center"><Spin /></div>
+                                        ) : (
+                                            popularMedications.length === 0 ? (
+                                                <div className="py-6 text-center">
+                                                    <Empty description={<span>Chưa có thuốc để hiển thị — kiểm tra API hoặc thêm thuốc vào hệ thống</span>} />
+                                                </div>
+                                            ) : (
+                                                <List
+                                                    size="small"
+                                                    itemLayout="horizontal"
+                                                    dataSource={popularMedications}
+                                                    renderItem={(item) => (
+                                                        <List.Item 
+                                                            actions={[
+                                                                <Button 
+                                                                    icon={<PlusOutlined />} 
+                                                                    type="text" 
+                                                                    className="text-green-600"
+                                                                    onClick={() => handleAddMedication(item)}
+                                                                    key="add"
+                                                                />,
+                                                            ]}
+                                                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                                                        >
+                                                            <List.Item.Meta
+                                                                title={<Text strong className="text-sm">{item.name}</Text>}
+                                                                description={
+                                                                    <Text type="secondary" className="text-xs italic text-gray-500">{item.usage || item.category || ''}</Text>
+                                                                }
+                                                            />
+                                                        </List.Item>
+                                                    )}
+                                                />
+                                            )
+                                        )}
+                                    </div>
                         </Card>
                     </Col>
 
@@ -183,7 +292,8 @@
                                             key={med.id} // Sử dụng ID duy nhất
                                             medication={med} 
                                             index={index} 
-                                            onRemove={handleRemoveMedication} 
+                                            onRemove={handleRemoveMedication}
+                                            onChange={handleChangeMedication}
                                         />
                                     ))}
                                 </div>
@@ -208,8 +318,9 @@
                                 <Button 
                                     type="primary" 
                                     icon={<FileTextOutlined />} 
-                                    onClick={() => alert('Đơn thuốc đã được tạo thành công!')}
-                                    disabled={!canSubmit} // Vô hiệu hóa nếu thiếu chẩn đoán hoặc thuốc
+                                    onClick={handleSavePrescription}
+                                    disabled={!canSubmit || saving} // Vô hiệu hóa nếu thiếu chẩn đoán hoặc thuốc
+                                    loading={saving}
                                 >
                                     Tạo đơn thuốc
                                 </Button>

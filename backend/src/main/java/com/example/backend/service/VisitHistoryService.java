@@ -22,6 +22,11 @@ public class VisitHistoryService {
     public Page<VisitHistory> findAll(Pageable pageable) { return repo.findAll(pageable); }
 
     @Transactional(readOnly = true)
+    public java.util.List<VisitHistory> findByMemberId(Integer memberId) {
+        return repo.findByMemberMemberId(memberId);
+    }
+
+    @Transactional(readOnly = true)
     public VisitHistory findById(Integer id) { return repo.findById(id).orElseThrow(() -> new NotFoundException("VisitHistory not found: " + id)); }
 
     @Transactional

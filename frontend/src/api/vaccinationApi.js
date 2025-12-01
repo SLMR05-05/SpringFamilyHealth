@@ -13,6 +13,11 @@ const vaccinationApi = {
     return axiosClient.get(`/vaccinations/${id}`);
   },
 
+  // Get vaccinations by member ID
+  getByMemberId(memberId) {
+    return axiosClient.get(`/vaccinations/member/${memberId}`);
+  },
+
   // Create new vaccination
   create(data) {
     return axiosClient.post("/vaccinations", data);

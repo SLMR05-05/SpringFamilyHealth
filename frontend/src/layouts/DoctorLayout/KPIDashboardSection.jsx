@@ -1,65 +1,108 @@
-import React from 'react';
-import { Card, Typography, Space, Row, Col } from 'antd';
-import { UserOutlined, CalendarOutlined, HeartOutlined, FileTextOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, Typography, Row, Col, Spin, Empty } from 'antd';
+import { UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import familyApi from '../../api/familyApi';
 
 const { Title, Text } = Typography;
 
-// Dữ liệu mẫu (Mô phỏng state từ backend)
-const KPI_DATA = [
-    {
-        title: "Bệnh nhân",
-        count: 3,
-        subtext: "3 đang theo dõi",
-        icon: UserOutlined,
-        iconLabel: "patient",
-    },
-    {
-        title: "Cuộc hẹn hôm nay",
-        count: 3,
-        subtext: "1 đã hoàn thành",
-        icon: CalendarOutlined,
-        iconLabel: "today",
-    },
-    
-];
-
-const KPICard = ({ title, count, subtext, Icon, iconLabel }) => {
-    // Tùy chỉnh màu sắc dựa trên nội dung/trạng thái (ví dụ: đỏ cho ưu tiên cao)
-    const countColor = iconLabel === 'priority' && count > 0 ? 'text-red-500' : 'text-gray-900';
-    
+const KPICard = ({ title, count, subtext, Icon }) => {
     return (
         <Card className="rounded-xl shadow-lg border border-gray-100 transition-shadow hover:shadow-xl h-full">
             <div className="flex justify-between items-start mb-4">
-                <Text className="text-lg font-semibold text-gray-700">
-                    {title}
-                </Text>
-                {/* Icon ở góc phải trên */}
-                <Icon className="text-xl text-gray-400" /> 
+                <Text className="text-lg font-semibold text-gray-700">{title}</Text>
+                <Icon className="text-xl text-gray-400" />
             </div>
 
-            <Title level={1} className={`text-4xl font-bold m-0 ${countColor}`}>
+            <Title level={1} className={`text-4xl font-bold m-0 text-gray-900`}>
                 {count}
             </Title>
-            <Text className="text-gray-500 text-sm mt-1 block">
-                {subtext}
-            </Text>
+            <Text className="text-gray-500 text-sm mt-1 block">{subtext}</Text>
         </Card>
     );
 };
 
+const KPIDashboardSection = ({ selectedFamily }) => {
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
 
-const KPIDashboardSection = () => {
+    useEffect(() => {
+        if (!selectedFamily) {
+            setData(null);
+            return;
+        }
+
+        let mounted = true;
+        setLoading(true);
+        setError(null);
+        familyApi.getDashboard(selectedFamily.familyId)
+            .then((resp) => {
+                if (!mounted) return;
+                // axiosClient may return either the full response object or the unwrapped data.
+                const response = resp?.data ?? resp;
+                setData(response);
+            })
+            .catch((err) => {
+                console.error('Failed to load family dashboard', err);
+                if (!mounted) return;
+                setError(err?.message || 'Load failed');
+            })
+            .finally(() => mounted && setLoading(false));
+
+        return () => { mounted = false; };
+    }, [selectedFamily]);
+
+    if (!selectedFamily) return null;
+
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
+                <Spin />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
+                <div className="text-red-600">Lỗi tải KPI: {error}</div>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
+                <Empty description="Chưa có dữ liệu KPI" />
+            </div>
+        );
+    }
+
+    // Map expected fields from backend FamilyDashboardResponse
+    const stats = data.statistics || {};
+
+    // Chỉ hiển thị 2 KPI theo yêu cầu: số bệnh nhân và số lịch hẹn sắp tới (dùng trường upcomingAppointments từ backend)
+    const cards = [
+        {
+            title: 'Bệnh nhân',
+            count: stats.totalMembers ?? 0,
+            subtext: `${stats.totalMembers ?? 0} đang theo dõi`,
+            Icon: UserOutlined,
+        },
+        {
+            title: 'Lịch hẹn trong tuần',
+            count: stats.upcomingAppointments ?? 0,
+            subtext: `${stats.upcomingAppointments ?? 0} lịch hẹn`,
+            Icon: CalendarOutlined,
+        },
+    ];
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
             <Row gutter={[24, 24]}>
-                {KPI_DATA.map((kpi, index) => (
-                    <Col 
-                        key={index} 
-                        xs={24} // 100% width on extra small screens
-                        sm={12} // 50% width on small screens
-                        lg={6}  // 25% width on large screens
-                    >
-                        <KPICard {...kpi} Icon={kpi.icon} />
+                {cards.map((kpi, index) => (
+                    <Col key={index} xs={24} sm={12} lg={6}>
+                        <KPICard {...kpi} />
                     </Col>
                 ))}
             </Row>

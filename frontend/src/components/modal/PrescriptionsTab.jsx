@@ -26,7 +26,6 @@ const PrescriptionsTab = ({ prescriptions }) => (
                             <Text className="font-medium text-gray-800">{med.name}</Text>
                             <div className="flex space-x-6 text-gray-600">
                                 <Text>Liều: {med.dose}</Text>
-                                <Text>Tần suất: {med.freq}</Text>
                                 <Text>Thời gian: {med.duration}</Text>
                             </div>
                         </div>
