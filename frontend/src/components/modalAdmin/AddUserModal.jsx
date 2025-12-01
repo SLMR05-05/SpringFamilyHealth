@@ -1,8 +1,9 @@
 import React from 'react';
-import { Modal, Form, Input, Button, Space, Typography } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined, CloseOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, Button, Space, Typography, Select } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined, CloseOutlined, PhoneOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
+const { Option } = Select;
 
 const AddUserModal = ({ open, onCancel, onFinish }) => {
     const [form] = Form.useForm();
@@ -55,6 +56,30 @@ const AddUserModal = ({ open, onCancel, onFinish }) => {
                     ]}
                 >
                     <Input prefix={<MailOutlined className="text-gray-400" />} placeholder="ví dụ: ten@email.com" />
+                </Form.Item>
+
+                {/* Số điện thoại */}
+                <Form.Item
+                    name="phone"
+                    label="Số điện thoại"
+                    rules={[
+                        { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại phải có 10-11 chữ số!' }
+                    ]}
+                >
+                    <Input prefix={<PhoneOutlined className="text-gray-400" />} placeholder="Ví dụ: 0912345678" />
+                </Form.Item>
+
+                {/* Vai trò */}
+                <Form.Item
+                    name="role"
+                    label="Vai trò"
+                    initialValue="user"
+                    rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
+                >
+                    <Select>
+                        <Option value="user">Người dùng</Option>
+                        <Option value="admin">Quản trị viên</Option>
+                    </Select>
                 </Form.Item>
 
                 {/* Mật khẩu */}

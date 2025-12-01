@@ -1,4 +1,4 @@
-    import React, { useState } from 'react';
+    import React, { useState, useEffect } from 'react';
     import { Modal, Button, Typography, Space, Divider, Form, Input, Select, message } from 'antd';
     import { CloseOutlined, UserOutlined, MailOutlined, LockOutlined, SaveOutlined } from '@ant-design/icons';
 
@@ -52,6 +52,18 @@
             email: userData.email,
             status: userData.status || 'Kích hoạt',
         };
+
+        // Ensure form fields update whenever the `user` prop or visibility changes.
+        useEffect(() => {
+            if (isVisible) {
+                // Reset then set values to ensure the form shows latest user data
+                form.resetFields();
+                form.setFieldsValue(initialValues);
+            } else {
+                // When modal is closed, reset the form to clear previous values
+                form.resetFields();
+            }
+        }, [user, isVisible]);
 
         return (
             <Modal

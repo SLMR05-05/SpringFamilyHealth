@@ -63,6 +63,11 @@ public class AuthenticationService {
         var user = userRepository.findByEmail(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        // Check if account is locked
+        if (user.getLocked() != null && user.getLocked()) {
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPasswordHash());
         if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
@@ -131,11 +136,23 @@ public class AuthenticationService {
     }
 
     private String buildScope(User user) {
-        // Assuming simple role string in User.role; prepend ROLE_
+        // Build scope with role; default to USER if role is null/empty
         List<String> scopes = new ArrayList<>();
-        if (user.getRole() != null && !user.getRole().isBlank()) {
-            scopes.add("ROLE_" + user.getRole());
+        String role = user.getRole();
+        
+        // Debug logging
+        log.info("Building scope for user: {} with role: {}", user.getEmail(), role);
+        
+        if (role == null || role.isBlank()) {
+            // Default to USER role if not set
+            log.warn("User {} has no role, defaulting to USER", user.getEmail());
+            scopes.add("ROLE_USER");
+        } else {
+            scopes.add("ROLE_" + role.trim().toUpperCase());
         }
-        return String.join(" ", scopes);
+        
+        String scopeString = String.join(" ", scopes);
+        log.info("Generated scope: {}", scopeString);
+        return scopeString;
     }
 }

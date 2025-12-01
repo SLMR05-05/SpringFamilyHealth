@@ -55,7 +55,8 @@ export const AuthProvider = ({ children }) => {
       return false;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      // Throw the error to be handled by the caller
+      throw error;
     }
   };
 

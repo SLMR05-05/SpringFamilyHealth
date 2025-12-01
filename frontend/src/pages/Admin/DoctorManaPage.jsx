@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Button,
   Card,
@@ -22,6 +22,7 @@ import {
 import AddDoctorModal from "../../components/modalAdmin/AddDoctorModal";
 import ApproveDoctorModal from "../../components/modalAdmin/ApproveDoctorModal";
 import DoctorDetailModal from "../../components/modalAdmin/DoctorDetailModal";
+import { doctorApi, userApi } from "../../api";
 
 const { Title, Text } = Typography;
 
@@ -257,8 +258,9 @@ function ActiveDoctorsTable({ data, onViewDetails, onDelete, paginationProps }) 
 // -------------------- MAIN COMPONENT --------------------
 export default function DoctorManagementPage() {
   // data
-  const [activeDoctors, setActiveDoctors] = useState(ACTIVE_DOCTORS_INITIAL);
-  const [pendingDoctors, setPendingDoctors] = useState(PENDING_DOCTORS_INITIAL);
+  const [activeDoctors, setActiveDoctors] = useState([]);
+  const [pendingDoctors, setPendingDoctors] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // modal state gom chung
   const [modal, setModal] = useState({ add: false, approve: false, detail: false });
@@ -271,6 +273,52 @@ export default function DoctorManagementPage() {
   const [pageSize] = useState(5);
 
   const [isPendingTableVisible, setIsPendingTableVisible] = useState(true);
+
+  // Load doctors from API
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true);
+        const response = await doctorApi.getAll(0, 100); // Get all doctors
+        console.log("Doctors API Response:", response);
+        
+        // Handle both Page object and Array
+        let doctorsList = [];
+        if (response.data) {
+          // If it's a Page object with content property
+          if (response.data.content && Array.isArray(response.data.content)) {
+            doctorsList = response.data.content;
+          } 
+          // If it's already an array
+          else if (Array.isArray(response.data)) {
+            doctorsList = response.data;
+          }
+        }
+        
+        const doctorsData = doctorsList.map((doctor, index) => ({
+          key: doctor.doctorId || index,
+          name: doctor.name || "N/A",
+          email: doctor.email,
+          specialty: doctor.description || "Chưa có mô tả",
+          status: doctor.locked ? "Khóa" : "Kích hoạt",
+          certificate_number: doctor.certificateNumber || "N/A",
+          date: doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString("vi-VN") : "N/A",
+          doctorId: doctor.doctorId,
+          phone: doctor.phone,
+        }));
+        setActiveDoctors(doctorsData);
+        // Pending doctors would come from approval API if exists
+        setPendingDoctors([]);
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+        message.error("Không thể tải danh sách bác sĩ");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   // -------------------- CRUD handlers --------------------
   const openModal = useCallback((key, doctor = null) => {
@@ -300,22 +348,104 @@ export default function DoctorManagementPage() {
     message.success(`Đã từ chối bác sĩ ${doctor.name}.`);
   }, []);
 
-  const handleAddNewDoctor = useCallback((payload) => {
-    const newDoctor = doctorService.create(payload);
-    setActiveDoctors((prev) => [newDoctor, ...prev]);
-    closeModal("add");
-    setCurrentPage(1);
-    message.success(`Đã thêm bác sĩ ${payload.name} thành công!`);
-    // password is handled within modal - here we don't store it
-    if (payload.password) console.log(`Mật khẩu tạm thời cho ${payload.name}: ${payload.password}`);
+  const handleAddNewDoctor = useCallback(async (payload) => {
+    try {
+      setLoading(true);
+      
+      // 1. Tạo user trước
+      const userData = {
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone || "",
+        role: "doctor",
+        passwordHash: payload.password,
+      };
+      
+      const userResponse = await userApi.create(userData);
+      const userId = userResponse.data.userId;
+      
+      // 2. Tạo doctor với userId vừa tạo
+      const doctorData = {
+        userId: userId,
+        certificateNumber: payload.certificate_number || "",
+        description: payload.specialty || "",
+      };
+      
+      const doctorResponse = await doctorApi.create(doctorData);
+      
+      // 3. Thêm vào danh sách
+      const newDoctor = {
+        key: doctorResponse.data.doctorId,
+        name: doctorResponse.data.name,
+        email: doctorResponse.data.email,
+        specialty: doctorResponse.data.description || "Chưa có mô tả",
+        status: doctorResponse.data.locked ? "Khóa" : "Kích hoạt",
+        certificate_number: doctorResponse.data.certificateNumber || "N/A",
+        date: doctorResponse.data.createdAt ? new Date(doctorResponse.data.createdAt).toLocaleDateString("vi-VN") : new Date().toLocaleDateString("vi-VN"),
+        doctorId: doctorResponse.data.doctorId,
+        phone: doctorResponse.data.phone,
+      };
+      
+      setActiveDoctors((prev) => [newDoctor, ...prev]);
+      closeModal("add");
+      setCurrentPage(1);
+      message.success(`Đã thêm bác sĩ ${payload.name} thành công!`);
+    } catch (error) {
+      console.error("Error creating doctor:", error);
+      message.error(error.message || "Không thể tạo tài khoản bác sĩ");
+    } finally {
+      setLoading(false);
+    }
   }, [closeModal]);
 
-  const handleSaveDoctorChanges = useCallback((doctorId, changes) => {
-    setActiveDoctors((prev) => prev.map((d) => (d.key === doctorId ? doctorService.update(d, changes) : d)));
-    closeModal("detail");
-    message.success(`Cập nhật thành công bác sĩ ID: ${doctorId}`);
-    if (changes.newPassword) console.log(`Mật khẩu mới được set cho ID ${doctorId}`);
-  }, [closeModal]);
+  const handleSaveDoctorChanges = useCallback(async (doctorId, changes) => {
+    try {
+      setLoading(true);
+      
+      // Tìm doctor để lấy userId
+      const doctor = activeDoctors.find(d => d.key === doctorId);
+      if (!doctor) {
+        message.error("Không tìm thấy bác sĩ");
+        return;
+      }
+      
+      // 1. Update user info nếu có thay đổi
+      if (changes.name || changes.email || changes.phone || changes.newPassword) {
+        const userUpdateData = {};
+        if (changes.name) userUpdateData.name = changes.name;
+        if (changes.email) userUpdateData.email = changes.email;
+        if (changes.phone) userUpdateData.phone = changes.phone;
+        if (changes.newPassword) userUpdateData.passwordHash = changes.newPassword;
+        
+        // Gọi API update user
+        await userApi.update(doctor.userId || doctor.key, userUpdateData);
+      }
+      
+      // 2. Update doctor info
+      const doctorUpdateData = {
+        userId: doctor.userId || doctor.key,
+        certificateNumber: changes.certificate_number || doctor.certificate_number,
+        description: changes.specialty || doctor.specialty,
+      };
+      
+      await doctorApi.update(doctorId, doctorUpdateData);
+      
+      // 3. Cập nhật state local
+      setActiveDoctors((prev) => prev.map((d) => 
+        d.key === doctorId 
+          ? { ...d, ...changes, specialty: changes.specialty || d.specialty }
+          : d
+      ));
+      
+      closeModal("detail");
+      message.success("Cập nhật thành công bác sĩ!");
+    } catch (error) {
+      console.error("Error updating doctor:", error);
+      message.error(error.message || "Không thể cập nhật bác sĩ");
+    } finally {
+      setLoading(false);
+    }
+  }, [closeModal, activeDoctors]);
 
   const handleDeleteActiveDoctor = useCallback((doctor) => {
     const ok = window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của ${doctor.name} không?`);
@@ -396,7 +526,7 @@ export default function DoctorManagementPage() {
             data={currentActiveUsers}
             onViewDetails={handleViewDetails}
             onDelete={handleDeleteActiveDoctor}
-            paginationProps={{ pagination: tablePagination }}
+            paginationProps={{ pagination: tablePagination, loading }}
           />
         </Card>
       </div>
