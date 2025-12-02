@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Heart, Calendar, Bell, AlertCircle, MessageCircle, X, Globe } from 'lucide-react';
+import { Users, Heart, Calendar, Bell, AlertCircle, MessageCircle, X, Globe, Stethoscope } from 'lucide-react';
 import { MdSettings } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import familyApi from '../api/familyApi';
@@ -18,6 +18,7 @@ import RecordsView from '../components/dashboard/RecordsView';
 import AppointmentsView from '../components/dashboard/AppointmentsView';
 import VaccinationsView from '../components/dashboard/VaccinationsView';
 import NotificationDropdown from '../components/NotificationDropdown';
+import DoctorView from '../components/modalUser/DoctorView'; // Import Component Mới
 import vaccinationApi from '../api/vaccinationApi';
 
 export default function FamilyDashboard() {
@@ -41,77 +42,48 @@ export default function FamilyDashboard() {
     address: ''
   });
 
-  // Fetch dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-        // Get user's family information
-        const familyInfoResponse = await userApi.getMyFamily();
+      const familyInfoResponse = await userApi.getMyFamily();
+      const familyInfo = familyInfoResponse.data || familyInfoResponse;
+      const familyIdValue = familyInfo?.familyId;
 
-        // Handle both unwrapped and wrapped responses
-        const familyInfo = familyInfoResponse.data || familyInfoResponse;
-
-        const familyIdValue = familyInfo?.familyId;
-
-        // Check if user has a family
-        if (!familyIdValue) {
-          antdMessage.warning('Bạn chưa thuộc gia đình nào. Vui lòng tạo hoặc tham gia gia đình.');
-          setDashboardData({
-            family: {},
-            members: [],
-            statistics: {
-              totalMembers: 0,
-              healthyMembers: 0,
-              needAttention: 0,
-              upcomingAppointments: 0,
-              unreadNotifications: 0
-            },
-            upcomingAppointments: [],
-            recentNotifications: []
-          });
-          return;
-        }
-
-        setFamilyId(familyIdValue);
-        // Prefer memberId/userId from familyInfo, fall back to localStorage user
-        let resolvedUserId = familyInfo?.userId || familyInfo?.id;
-        if (!resolvedUserId) {
-          try {
-            const stored = localStorage.getItem('user');
-            const parsed = stored ? JSON.parse(stored) : null;
-            resolvedUserId = parsed?.userId || parsed?.id || null;
-          } catch (e) {
-            console.warn('Failed to parse localStorage user for fallback', e);
-          }
-        }
-        setCurrentUserId(resolvedUserId);
-
-        // Fetch dashboard data for the family
-        const dashboardResponse = await familyApi.getDashboard(familyIdValue);
-
-        // Handle both unwrapped and wrapped responses
-        const response = dashboardResponse.data || dashboardResponse;
-        setDashboardData(response);
-
-        // Update user profile from family data
-        if (response && response.family) {
-          setUserProfile({
-            name: `Gia đình ${response.family.doctorName || ''}`,
-            email: '',
-            phone: response.family.contactNumber || '',
-            address: response.family.address || ''
-          });
-        }
-      } catch (error) {
-        console.error('Failed to load dashboard:', error);
-        antdMessage.error('Không thể tải dữ liệu dashboard');
-      } finally {
-        setLoading(false);
+      if (!familyIdValue) {
+        antdMessage.warning('Bạn chưa thuộc gia đình nào.');
+        setDashboardData({ family: {}, members: [], statistics: {}, upcomingAppointments: [], recentNotifications: [] });
+        return;
       }
-    };
 
+      setFamilyId(familyIdValue);
+      let resolvedUserId = familyInfo?.userId || familyInfo?.id;
+      if (!resolvedUserId) {
+        const stored = localStorage.getItem('user');
+        resolvedUserId = stored ? JSON.parse(stored)?.userId : null;
+      }
+      setCurrentUserId(resolvedUserId);
+
+      const dashboardResponse = await familyApi.getDashboard(familyIdValue);
+      const response = dashboardResponse.data || dashboardResponse;
+      setDashboardData(response);
+
+      if (response && response.family) {
+        setUserProfile({
+          name: `Gia đình ${response.family.doctorName || ''}`,
+          email: '',
+          phone: response.family.contactNumber || '',
+          address: response.family.address || ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+      antdMessage.error('Không thể tải dữ liệu dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -170,7 +142,7 @@ export default function FamilyDashboard() {
             setPrescriptions([]);
           } else {
             const prescriptionResponse = await prescriptionApi.getByMemberId(memberIdNumber);
-            
+
             const prescriptionData = prescriptionResponse?.data || prescriptionResponse?.result || prescriptionResponse || [];
             setPrescriptions(Array.isArray(prescriptionData) ? prescriptionData : []);
 
@@ -269,7 +241,8 @@ export default function FamilyDashboard() {
     { id: 'members', label: t('Dashboard.Tabs.Members'), icon: Users },
     { id: 'records', label: t('Dashboard.Tabs.Records'), icon: Heart },
     { id: 'appointments', label: t('Dashboard.Tabs.Appointments'), icon: Calendar },
-    { id: 'vaccinations', label: 'Tiêm chủng', icon: Bell }
+    { id: 'vaccinations', label: 'Tiêm chủng', icon: Bell },
+    { id: 'doctor', label: 'Bác sĩ', icon: Stethoscope }
   ];
 
   return (
@@ -287,8 +260,8 @@ export default function FamilyDashboard() {
                 <p className="text-sm text-gray-500">{t('Dashboard.Welcome')}, {userProfile.name}</p>
               </div>
             </div>
-              <div className="flex items-center gap-4">
-              <button 
+            <div className="flex items-center gap-4">
+              <button
                 onClick={changeLanguage}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
               >
@@ -297,13 +270,12 @@ export default function FamilyDashboard() {
               </button>
 
               <NotificationDropdown />
-              <button 
+              <button
                 onClick={() => setCurrentView('settings')}
-                className={`w-full border rounded-lg gap-2 px-3 py-2 transition ${
-                  currentView === 'settings' 
-                    ? 'bg-gray-100 border-gray-400 ring-2 ring-gray-100' 
+                className={`w-full border rounded-lg gap-2 px-3 py-2 transition ${currentView === 'settings'
+                    ? 'bg-gray-100 border-gray-400 ring-2 ring-gray-100'
                     : 'border-gray-300 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <MdSettings className="settings-icon w-6 h-6 text-gray-700" />
               </button>
@@ -319,58 +291,57 @@ export default function FamilyDashboard() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
           </div>
         ) : currentView === 'settings' ? (
-          <SettingsView 
-            onBack={() => setCurrentView('dashboard')} 
+          <SettingsView
+            onBack={() => setCurrentView('dashboard')}
           />
         ) : (
           <div className="space-y-8">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard 
-                title={t('Dashboard.Stats.Members')} 
-                value={stats.totalMembers.toString()} 
-                subtitle={`${stats.healthyMembers} ${t('Dashboard.Stats.Healthy')}`} 
-                icon={Users} 
-                onClick={() => setActiveTab('members')} 
+              <StatCard
+                title={t('Dashboard.Stats.Members')}
+                value={stats.totalMembers.toString()}
+                subtitle={`${stats.healthyMembers} ${t('Dashboard.Stats.Healthy')}`}
+                icon={Users}
+                onClick={() => setActiveTab('members')}
               />
-              <StatCard 
-                title={t('Dashboard.Stats.Attention')} 
-                value={stats.needAttention.toString()} 
-                subtitle={t('Dashboard.Stats.Monitor')} 
-                icon={AlertCircle} 
-                alert={stats.needAttention > 0} 
-                onClick={() => setActiveTab('members')} 
+              <StatCard
+                title={t('Dashboard.Stats.Attention')}
+                value={stats.needAttention.toString()}
+                subtitle={t('Dashboard.Stats.Monitor')}
+                icon={AlertCircle}
+                alert={stats.needAttention > 0}
+                onClick={() => setActiveTab('members')}
               />
-              <StatCard 
-                title={t('Dashboard.Stats.Upcoming')} 
-                value={stats.upcomingAppointments.toString()} 
-                subtitle={t('Dashboard.Stats.ThisMonth')} 
-                icon={Calendar} 
-                onClick={() => setActiveTab('appointments')} 
+              <StatCard
+                title={t('Dashboard.Stats.Upcoming')}
+                value={stats.upcomingAppointments.toString()}
+                subtitle={t('Dashboard.Stats.ThisMonth')}
+                icon={Calendar}
+                onClick={() => setActiveTab('appointments')}
               />
-              <StatCard 
-                title={t('Dashboard.Stats.Unread')} 
-                value={stats.unreadNotifications.toString()} 
-                subtitle={t('Dashboard.Stats.Unread')} 
-                icon={Bell} 
-                onClick={() => setActiveTab('notifications')} 
+              <StatCard
+                title={t('Dashboard.Stats.Unread')}
+                value={stats.unreadNotifications.toString()}
+                subtitle={t('Dashboard.Stats.Unread')}
+                icon={Bell}
+                onClick={() => setActiveTab('notifications')}
               />
             </div>
 
             {/* Tab Navigation */}
             <div className="bg-white border rounded-3xl border-gray-200 p-1 overflow-x-auto">
-              <nav className="flex md:grid md:grid-cols-4 min-w-max md:min-w-0">
+              <nav className="flex md:grid md:grid-cols-5 min-w-max md:min-w-0">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center justify-center gap-2 py-2 px-4 rounded-3xl m-1 transition-all flex-1 ${
-                        activeTab === tab.id
+                      className={`flex items-center justify-center gap-2 py-2 px-4 rounded-3xl m-1 transition-all flex-1 ${activeTab === tab.id
                           ? 'bg-gray-900 text-white shadow-md'
                           : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium whitespace-nowrap">{tab.label}</span>
@@ -384,15 +355,29 @@ export default function FamilyDashboard() {
             <div>
               {activeTab === 'members' && <MembersView members={familyMembers} />}
               {activeTab === 'records' && (
-                <RecordsView 
-                  records={medicalRecords} 
-                  visitHistory={visitHistory} 
+                <RecordsView
+                  records={medicalRecords}
+                  visitHistory={visitHistory}
                   prescriptions={prescriptions}
                   onRefreshPrescriptions={handleRefreshPrescriptions}
                 />
               )}
               {activeTab === 'appointments' && <AppointmentsView appointments={appointments} />}
               {activeTab === 'vaccinations' && <VaccinationsView vaccinations={vaccinations} />}
+              {activeTab === 'doctor' && (
+                <DoctorView
+                  familyId={familyId}
+                  // Truyền object doctor hiện tại từ dashboardData (nếu backend đã trả về trong family object)
+                  currentDoctor={dashboardData?.family?.doctorId ? {
+                    id: dashboardData.family.doctorId,
+                    name: dashboardData.family.doctorName,
+                    specialization: dashboardData.family.doctorSpecialization, // Cần backend trả thêm trường này
+                    phone: dashboardData.family.doctorPhone, // Cần backend trả thêm trường này
+                    address: "Phòng khám FamilyHealth"
+                  } : null}
+                  onRefresh={fetchDashboardData}
+                />
+              )}
             </div>
           </div>
         )}
