@@ -4,13 +4,22 @@ import com.example.backend.dto.auth.AuthenticationRequest;
 import com.example.backend.dto.auth.IntrospectRequest;
 import com.example.backend.dto.auth.LogoutRequest;
 import com.example.backend.dto.auth.RefreshRequest;
+import com.example.backend.dto.auth.RegisterRequest;
 import com.example.backend.dto.response.AuthenticationResponse;
 import com.example.backend.dto.response.IntrospectResponse;
+import com.example.backend.entity.Doctor;
+import com.example.backend.entity.Family;
+import com.example.backend.entity.Member;
 import com.example.backend.entity.InvalidatedToken;
+import com.example.backend.entity.InviteCode;
 import com.example.backend.entity.User;
 import com.example.backend.exception.AppException;
 import com.example.backend.exception.ErrorCode;
+import com.example.backend.repository.DoctorRepository;
+import com.example.backend.repository.FamilyRepository;
 import com.example.backend.repository.InvalidatedTokenRepository;
+import com.example.backend.repository.InviteCodeRepository;
+import com.example.backend.repository.MemberRepository;
 import com.example.backend.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -23,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Objects;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -37,7 +45,11 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
     private final PasswordEncoder passwordEncoder;
-
+        // Inject thêm các repository cần thiết cho logic đăng ký
+    private final FamilyRepository familyRepository;
+    private final MemberRepository memberRepository;
+    private final DoctorRepository doctorRepository;
+    private final InviteCodeRepository inviteCodeRepository;
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGN_KEY;
@@ -98,6 +110,121 @@ public class AuthenticationService {
         return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
+
+
+   // --- LOGIC ĐĂNG KÝ (MỚI) ---
+
+    public AuthenticationResponse register(RegisterRequest request) {
+        // 1. Kiểm tra Email đã tồn tại chưa
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email đã được sử dụng!"); // Nên dùng custom exception UserAlreadyExists
+        }
+
+        // 2. Tạo User (Bảng user) - Bước chung cho mọi loại tài khoản
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setName(request.getName());
+        user.setPhone(request.getPhone());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setLocked(false); // Mặc định tài khoản active
+
+        // 3. Phân loại xử lý dựa trên Registration Type
+        String type = request.getRegistrationType() != null ? request.getRegistrationType().toUpperCase() : "MEMBER";
+
+        switch (type) {
+            case "HEAD": // Chủ hộ
+                registerHeadOfHousehold(user, request);
+                break;
+            case "MEMBER": // Thành viên (qua mã mời)
+                registerFamilyMember(user, request);
+                break;
+            case "DOCTOR": // Bác sĩ
+                registerDoctor(user, request);
+                break;
+            default:
+                throw new RuntimeException("Loại tài khoản không hợp lệ: " + type);
+        }
+
+        // 4. Tạo token để tự động đăng nhập sau khi đăng ký thành công
+        var token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
+    }
+
+    // Xử lý đăng ký Chủ hộ
+    private void registerHeadOfHousehold(User user, RegisterRequest request) {
+        user.setRole("USER"); // Role trong bảng user là USER
+        User savedUser = userRepository.save(user);
+
+        // Tạo gia đình mới
+        Family family = new Family();
+        family.setAddress(request.getAddress());
+        family.setContactNumber(request.getPhone());
+        // family.setDoctorId(null); // Chưa có bác sĩ phụ trách lúc đầu
+        Family savedFamily = familyRepository.save(family);
+        // Tạo Member với role HEAD
+        Member member = new Member();
+        member.setMemberId(savedUser.getUserId()); // ID member trùng với User ID (OneToOne)
+        member.setFamily(savedFamily);
+        member.setRoleInFamily("HEAD");
+        member.setRelationship("Chủ hộ");
+        // Map ngược lại user để Hibernate hiểu quan hệ (nếu Entity Member có field user)
+        member.setUser(savedUser);
+        
+        // Lưu thông tin bổ sung nếu có trong request
+        member.setAddress(request.getAddress());
+        member.setPhone(request.getPhone());
+        member.setEmail(request.getEmail());
+
+        memberRepository.save(member);
+    }
+
+    // Xử lý đăng ký Thành viên (Người thân)
+    private void registerFamilyMember(User user, RegisterRequest request) {
+        user.setRole("USER");
+        User savedUser = userRepository.save(user);
+
+        // Tìm gia đình thông qua mã mời
+        InviteCode invite = inviteCodeRepository.findByCode(request.getInviteCode())
+                .orElseThrow(() -> new RuntimeException("Mã mời không hợp lệ hoặc không tồn tại!"));
+
+        // Kiểm tra mã mời hết hạn (nếu cần)
+        // if (invite.getExpiredAt() != null && invite.getExpiredAt().before(new Date())) { ... }
+
+        // Tạo Member với role MEMBER thuộc gia đình tìm được
+        Member member = new Member();
+        member.setMemberId(savedUser.getUserId());
+        member.setFamily(invite.getFamily()); // Link vào family của mã mời
+        member.setRoleInFamily("MEMBER");
+        member.setRelationship("Thành viên"); // Sẽ cập nhật cụ thể sau
+        member.setUser(savedUser);
+        
+        member.setPhone(request.getPhone());
+        member.setEmail(request.getEmail());
+
+        memberRepository.save(member);
+    }
+
+    // Xử lý đăng ký Bác sĩ
+    private void registerDoctor(User user, RegisterRequest request) {
+        user.setRole("DOCTOR");
+        User savedUser = userRepository.save(user);
+
+        // Tạo Doctor
+        Doctor doctor = new Doctor();
+        doctor.setDoctorId(savedUser.getUserId());
+        doctor.setCertificateNumber(request.getCertificateNumber());
+        doctor.setDescription(request.getSpecialization()); // Lưu chuyên khoa vào description
+        doctor.setUser(savedUser);
+
+        doctorRepository.save(doctor);
+    }
+
+
+
+
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGN_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -155,4 +282,6 @@ public class AuthenticationService {
         log.info("Generated scope: {}", scopeString);
         return scopeString;
     }
+
+    
 }

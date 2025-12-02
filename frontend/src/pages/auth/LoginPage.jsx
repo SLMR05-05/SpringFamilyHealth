@@ -1,135 +1,176 @@
-import React, { useState } from 'react';
-import { Button, Form, Input, Typography, Divider, Space, message } from 'antd';
-import { MailOutlined, LockOutlined, GoogleOutlined, FacebookFilled, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-// Đã xóa: import '../../styles/tailwind.css'; // Dòng này gây lỗi
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom"; // Thêm Link
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useAuth } from "../../context/AuthProvider";
 
-const { Title, Text } = Typography;
+export default function Login() {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // const [role, setRole] = useState("Gia đình"); // Có thể bỏ nếu không dùng trong UI
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-const LoginPage = () => {
-    const [loading, setLoading] = useState(false);
-    const [form] = Form.useForm();
-
-    const onFinish = (values) => {
-        setLoading(true);
-        console.log('Thông tin đăng nhập:', values);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    
+    try {
+      const success = await login(email, password);
+      
+      if (success) {
+        // Lấy thông tin user từ localStorage sau khi login thành công
+        // Lưu ý: Đảm bảo hàm login() trong AuthProvider đã setItem 'user'
+        const userInfo = JSON.parse(localStorage.getItem('user'));
         
-        setTimeout(() => {
-            setLoading(false);
-            // Logic xác thực demo
-            if (values.email === 'admin@demo.com' && values.password === '123456') {
-                message.success('Đăng nhập thành công!');
-                // Chuyển hướng đến Dashboard
-            } else {
-                message.error('Email hoặc mật khẩu không đúng.');
+        if (userInfo) {
+            switch (userInfo.role) {
+            case "admin":
+                navigate("/admin");
+                break;
+            case "doctor":
+                navigate("/doctor"); // Hoặc trang dashboard bác sĩ
+                break;
+            case "user":
+            default:
+                navigate("/user-dashboard");
+                break;
             }
-        }, 1500);
-    };
+        } else {
+             navigate("/user-dashboard"); // Fallback mặc định
+        }
+      } else {
+        setError("Tên đăng nhập hoặc mật khẩu không đúng");
+      }
+    } catch (error) {
+      setError(error.message || "Đã xảy ra lỗi khi đăng nhập");
+    }
+  };
 
-    return (
-        <div className="flex items-center justify-center h-full bg-gray-100 p-4 font-sans">
-            <div className="w-full max-w-md text-center bg-white p-8 rounded-xl shadow-lg">
-                
-                {/* Logo Area */}
-                <div className="mb-8">
-                    {/* Giả lập Logo/Biểu tượng */}
-                    <div className="inline-block p-3 rounded-full bg-blue-50 text-blue-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 flex items-center justify-center p-6 font-sans">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="backdrop-blur-xl bg-white/70 rounded-2xl shadow-2xl w-full max-w-md p-8 relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-bl-full opacity-30 blur-2xl"></div>
 
-                {/* Header Text */}
-                <Title level={2} className="text-3xl font-bold mb-2 text-gray-800">
-                    Chào mừng trở lại
-                </Title>
-                <Text className="text-gray-500 mb-8 block">
-                    Đăng nhập vào Dashboard của bạn
-                </Text>
-
-                <Form
-                    form={form}
-                    name="login_form"
-                    initialValues={{ remember: true }}
-                    onFinish={onFinish}
-                    layout="vertical"
-                    className="mt-6"
-                >
-                    {/* Email Input */}
-                    <Form.Item
-                        label={<Text strong className="text-gray-700">Địa chỉ Email</Text>}
-                        name="email"
-                        rules={[{ required: true, message: 'Vui lòng nhập địa chỉ email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}
-                        className="text-left"
-                    >
-                        <Input 
-                            prefix={<MailOutlined className="text-gray-400" />} 
-                            placeholder="Nhập địa chỉ email của bạn" 
-                            className="h-12 rounded-lg border-gray-300 shadow-sm focus:border-blue-500"
-                        />
-                    </Form.Item>
-
-                    {/* Password Input */}
-                    <Form.Item
-                        label={<Text strong className="text-gray-700">Mật khẩu</Text>}
-                        name="password"
-                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
-                        className="text-left mb-2"
-                    >
-                        <Input.Password
-                            prefix={<LockOutlined className="text-gray-400" />}
-                            placeholder="Nhập mật khẩu của bạn"
-                            className="h-12 rounded-lg border-gray-300 shadow-sm focus:border-blue-500"
-                            iconRender={visible => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
-                        />
-                    </Form.Item>
-
-                    {/* Links: Forgot Password & Register */}
-                    <div className="flex justify-between text-sm mb-6">
-                        <a href="#forgot" className="text-blue-600 hover:text-blue-800 font-medium">
-                            Quên mật khẩu?
-                        </a>
-                        <a href="#register" className="text-blue-600 hover:text-blue-800 font-medium">
-                            Đăng ký
-                        </a>
-                    </div>
-                    
-                    {/* Primary Login Button */}
-                    <Form.Item className="mb-4">
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={loading}
-                            className="w-full h-12 text-lg font-semibold rounded-lg bg-blue-600 hover:bg-blue-700! transition duration-150 shadow-md"
-                        >
-                            Đăng nhập
-                        </Button>
-                    </Form.Item>
-                </Form>
-
-                {/* OR Divider */}
-                <Divider className="text-gray-500 font-medium">Hoặc</Divider>
-
-                {/* Social Login Buttons */}
-                <Space direction="vertical" className="w-full">
-                    <Button
-                        icon={<GoogleOutlined className="text-xl" />}
-                        size="large"
-                        className="w-full h-12 rounded-lg border-gray-300 text-gray-700 font-semibold text-base shadow-sm hover:border-blue-500!"
-                    >
-                        Đăng nhập bằng Google
-                    </Button>
-                    <Button
-                        icon={<FacebookFilled className="text-xl text-blue-600" />}
-                        size="large"
-                        className="w-full h-12 rounded-lg border-gray-300 text-gray-700 font-semibold text-base shadow-sm hover:border-blue-500!"
-                    >
-                        Đăng nhập bằng Facebook
-                    </Button>
-                </Space>
-            </div>
+        <div className="text-center mb-8 relative z-10">
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
+            {t("LoginPage.Welcome")} {t("LoginPage.Name")}
+          </h1>
+          <p className="text-gray-500">
+            {t("LoginPage.LoginToProject")} {t("LoginPage.Name")}
+          </p>
         </div>
-    );
-};
 
-export default LoginPage;
+        {/* FORM START */}
+        <motion.form
+          onSubmit={handleLogin}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="space-y-5 relative z-10"
+        >
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t("LoginPage.Email")}
+            </label>
+            <input
+              type="email"
+              placeholder={t("LoginPage.EnterYourEmail")}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+              className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t("LoginPage.Password")}
+            </label>
+            <div className="relative">
+                <input
+                type={showPassword ? "text" : "password"}
+                placeholder={t("LoginPage.EnterYourPassword")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition pr-10"
+                />
+                <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-indigo-600 focus:outline-none"
+                >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+            </div>
+            {/* Forgot Password Link */}
+            <div className="flex justify-end mt-2">
+                <span 
+                    onClick={() => navigate("/auth/forgot-password")}
+                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline cursor-pointer"
+                >
+                    {t("LoginPage.ForgotPassword")}
+                </span>
+            </div>
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 text-sm text-center bg-red-50 p-2 rounded border border-red-100"
+            >
+                {error}
+            </motion.p>
+          )}
+      
+          {/* Login button */}
+          <motion.button
+            type="submit"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200 shadow-lg mt-2"
+          >
+            {t("LoginPage.Login")}
+          </motion.button>
+
+          {/* Register Link */}
+          <div className="text-center mt-6 text-sm text-gray-600">
+            Chưa có tài khoản?{" "}
+            <span 
+                onClick={() => navigate("/auth/register")}
+                className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition cursor-pointer"
+            >
+                {t("LoginPage.Register")}
+            </span>
+          </div>
+
+        </motion.form>
+        {/* FORM END */}
+      </motion.div>
+
+      {/* Help Button (Giữ nguyên) */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 flex items-center justify-center text-xl z-50"
+        onClick={() => alert("Liên hệ hỗ trợ: support@familyhealth.com")}
+      >
+        ?
+      </motion.button>
+    </div>
+  );
+}

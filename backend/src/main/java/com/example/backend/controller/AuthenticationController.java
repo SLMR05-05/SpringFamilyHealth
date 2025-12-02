@@ -4,6 +4,7 @@ import com.example.backend.dto.auth.AuthenticationRequest;
 import com.example.backend.dto.auth.IntrospectRequest;
 import com.example.backend.dto.auth.LogoutRequest;
 import com.example.backend.dto.auth.RefreshRequest;
+import com.example.backend.dto.auth.RegisterRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.AuthenticationResponse;
 import com.example.backend.dto.response.IntrospectResponse;
@@ -46,5 +47,13 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         var result = authenticationService.refreshToken(request);
         return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    }
+     @PostMapping("/register")
+    public ApiResponse<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
+        var result = authenticationService.register(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .message("Đăng ký tài khoản thành công")
+                .build();
     }
 }

@@ -10,6 +10,7 @@
     "PleaseEnterAValidEmail": "Vui lòng nhập email hợp lệ",
     "Password": "Mật khẩu",
     "EnterYourPassword": "Nhập mật khẩu của bạn",
+    "NotHaveAccount": "Bạn đã có tài khoản?",
     "PleaseEnterYourPassword": "Vui lòng nhập mật khẩu",
     "ForgotPassword": "Quên mật khẩu?",
     "Register": "Đăng ký"
@@ -94,5 +95,38 @@
     "Save": "Lưu thay đổi",
     "Cancel": "Hủy",
     "SavedMsg": "Đã lưu thay đổi!"
+  },
+   "RegisterPage": {
+    "CreateAccount": "Tạo tài khoản mới",
+    "Subtitle": "Hãy tham gia cùng chúng tôi để chăm sóc sức khỏe tốt hơn.",
+    "Role": {
+      "User": "Người dùng",
+      "Doctor": "Bác sĩ"
+    },
+    "FullName": "Họ và tên",
+    "Email": "Email",
+    "Password": "Mật khẩu",
+    "ConfirmPassword": "Xác nhận mật khẩu",
+    "FamilyCode": "Mã mời gia đình",
+    "FamilyCodeHint": "Nhập mã để kết nối hồ sơ sức khỏe với gia đình bạn.",
+    "Specialization": "Chuyên khoa",
+    "SelectSpecialization": "Chọn chuyên khoa...",
+    "LicenseNumber": "Số chứng chỉ hành nghề",
+    "AgreeTo": "Tôi đồng ý với",
+    "Terms": "Điều khoản dịch vụ",
+    "And": "và",
+    "Privacy": "Chính sách bảo mật",
+    "RegisterNow": "Đăng ký ngay",
+    "Success": "Đăng ký thành công!",
+    "HaveAccount": "Bạn đã có tài khoản?",
+    "LoginNow": "Đăng nhập",
+    "User": {
+      "HeroTitle": "Chăm sóc sức khỏe cho cả gia đình",
+      "HeroDesc": "Kết nối mọi thành viên, theo dõi lịch sử khám bệnh và nhận tư vấn từ các chuyên gia hàng đầu."
+    },
+    "Doctor": {
+      "HeroTitle": "Nâng tầm sự nghiệp y khoa",
+      "HeroDesc": "Tham gia mạng lưới y tế số, quản lý bệnh nhân hiệu quả và mở rộng tầm ảnh hưởng chuyên môn của bạn."
+    }
   }
 }

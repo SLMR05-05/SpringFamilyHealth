@@ -116,7 +116,7 @@ export default function Login() {
           {error && (
             <p className="text-red-500 text-sm text-center">{error}</p>
           )}
-
+      
           {/* Login button */}
           <motion.button
             type="submit"
