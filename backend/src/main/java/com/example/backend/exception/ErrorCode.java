@@ -14,7 +14,8 @@ public enum ErrorCode {
     USER_NOT_EXISTED(1005, "User not existed", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
-    INVALID_DOB(1008, "Your age must be least at {min}!", HttpStatus.BAD_REQUEST)
+    INVALID_DOB(1008, "Your age must be least at {min}!", HttpStatus.BAD_REQUEST),
+    ACCOUNT_LOCKED(1009, "Tài khoản của bạn đã bị khóa, vui lòng liên hệ với quản trị viên", HttpStatus.FORBIDDEN)
     ;
     private int code;
     private String message;

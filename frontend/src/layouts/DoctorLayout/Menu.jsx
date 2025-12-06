@@ -10,6 +10,13 @@ const PillTabNavigation = () => {
     const location = useLocation();
     const menuItems = MenuDoctorConfig(); // Lấy cấu hình menu
 
+    // Chỉ hiển thị 3 tab chính cố định: Quản lý yêu cầu, Quản lý gia đình, Hồ sơ cá nhân
+    const displayedItems = menuItems.filter(i => 
+        i.key === '/doctor/requests' || 
+        i.key === '/doctor/families' || 
+        i.key === '/doctor/profile'
+    );
+
     const handleButtonClick = (key) => {
         navigate(key);
     };
@@ -17,7 +24,7 @@ const PillTabNavigation = () => {
     return (
         // SỬA ĐỔI 1: Thêm 'w-full' để Wrapper chiếm hết chiều rộng
         <div className="flex w-full justify-around items-center p-2 rounded-full bg-white shadow-md border border-gray-100">
-            {menuItems.map((item) => {
+            {displayedItems.map((item) => {
                 // Kiểm tra xem mục này có đang được chọn hay không
                 const isSelected = location.pathname === item.key;
                 

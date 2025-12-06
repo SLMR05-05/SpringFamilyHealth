@@ -112,6 +112,16 @@ public class UserService {
         userRepository.delete(existing);
     }
 
+    @Transactional(readOnly = true)
+    public long countAll() {
+        return userRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public long countByRole(String role) {
+        return userRepository.countByRole(role);
+    }
+
     // Simple custom exceptions for service layer
     public static class ResourceNotFoundException extends RuntimeException {
         public ResourceNotFoundException(String message) { super(message); }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, List, Button, Tag, Card, Spin, Empty } from 'antd';
+import { Typography, List, Button, Tag, Card, Spin, Empty, Modal, Input } from 'antd';
 import { ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import appointmentApi from '../../api/appointmentApi';
@@ -221,13 +221,35 @@ const TodayAppointmentList = () => {
 
     // Handler to mark appointment as COMPLETED
     const [completingId, setCompletingId] = useState(null);
-    const handleComplete = async (appointmentId) => {
+    const [diagnosisModalVisible, setDiagnosisModalVisible] = useState(false);
+    const [currentAppointmentId, setCurrentAppointmentId] = useState(null);
+    const [diagnosis, setDiagnosis] = useState('');
+
+    const handleComplete = (appointmentId) => {
         if (!appointmentId) return;
+        setCurrentAppointmentId(appointmentId);
+        setDiagnosis('');
+        setDiagnosisModalVisible(true);
+    };
+
+    const handleDiagnosisSubmit = async () => {
+        if (!currentAppointmentId) return;
         try {
-            setCompletingId(appointmentId);
-            await appointmentApi.updateStatus(appointmentId, 'COMPLETED');
+            setCompletingId(currentAppointmentId);
+            // Update appointment status to COMPLETED and save diagnosis to notes column
+            await appointmentApi.update(currentAppointmentId, { 
+                status: 'COMPLETED',
+                notes: diagnosis 
+            });
             // update UI state
-            setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, status: 'COMPLETED' } : a));
+            setAppointments(prev => prev.map(a => 
+                a.id === currentAppointmentId 
+                    ? { ...a, status: 'COMPLETED', notes: diagnosis } 
+                    : a
+            ));
+            setDiagnosisModalVisible(false);
+            setDiagnosis('');
+            setCurrentAppointmentId(null);
         } catch (e) {
             console.error('Failed to mark appointment completed', e);
         } finally {
@@ -278,6 +300,35 @@ const TodayAppointmentList = () => {
                     )
                 )}
             </Card>
+
+            {/* Modal nhập chẩn đoán */}
+            <Modal
+                title="Nhập chẩn đoán"
+                open={diagnosisModalVisible}
+                onOk={handleDiagnosisSubmit}
+                onCancel={() => {
+                    setDiagnosisModalVisible(false);
+                    setDiagnosis('');
+                    setCurrentAppointmentId(null);
+                }}
+                okText="Xác nhận hoàn thành"
+                cancelText="Hủy"
+                confirmLoading={completingId !== null}
+            >
+                <div className="py-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Chẩn đoán / Kết luận khám bệnh:
+                    </label>
+                    <Input.TextArea
+                        rows={4}
+                        value={diagnosis}
+                        onChange={(e) => setDiagnosis(e.target.value)}
+                        placeholder="Nhập chẩn đoán, kết luận khám bệnh..."
+                        maxLength={500}
+                        showCount
+                    />
+                </div>
+            </Modal>
         </div>
     );
 };

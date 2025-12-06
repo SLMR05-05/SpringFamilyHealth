@@ -55,7 +55,8 @@ export const AuthProvider = ({ children }) => {
       return false;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      // Throw the error to be handled by the caller
+      throw error;
     }
   };
 
@@ -71,6 +72,9 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      // Xóa dữ liệu doctor-specific để tránh xung đột khi đổi tài khoản
+      localStorage.removeItem('selectedFamily');
+      localStorage.removeItem('hasViewedPatients');
     }
   };
 

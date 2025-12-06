@@ -4,6 +4,7 @@
     "Welcome": "Welcome to",
     "Login": "Login",
     "LoginToProject": "Login to ",
+    "LoginToProject": "Login to ",
     "Email": "Email",
     "EnterYourEmail": "Enter your email",
     "PleaseEnterYourEmail": "Please enter your email",
@@ -94,5 +95,45 @@
     "Welcome": "Hello! I am your medical virtual assistant. How can I help your family today?",
     "Placeholder": "Type a message...",
     "Response": "Thank you for your question. The system will connect you with a specialist shortly."
+  },
+  "AddMember": {
+    "Title": "Add Member",
+    "CodeLabel": "Family Invite Code",
+    "ShareInstruction": "Share this code with family members so they can join",
+    "Copy": "Copy Code",
+    "Copied": "Copied!"
+  },
+  "RegisterPage": {
+    "CreateAccount": "Create New Account",
+    "Subtitle": "Join us to take better care of your health.",
+    "Role": {
+      "User": "User",
+      "Doctor": "Doctor"
+    },
+    "FullName": "Full Name",
+    "Email": "Email",
+    "Password": "Password",
+    "ConfirmPassword": "Confirm Password",
+    "FamilyCode": "Family Invite Code",
+    "FamilyCodeHint": "Enter code to connect health records with your family.",
+    "Specialization": "Specialization",
+    "SelectSpecialization": "Select specialization...",
+    "LicenseNumber": "Medical License Number",
+    "AgreeTo": "I agree to the",
+    "Terms": "Terms of Service",
+    "And": "and",
+    "Privacy": "Privacy Policy",
+    "RegisterNow": "Register Now",
+    "Success": "Registration Successful!",
+    "HaveAccount": "Already have an account?",
+    "LoginNow": "Login",
+    "User": {
+      "HeroTitle": "Healthcare for the whole family",
+      "HeroDesc": "Connect all members, track medical history, and get advice from top experts."
+    },
+    "Doctor": {
+      "HeroTitle": "Elevate your medical career",
+      "HeroDesc": "Join the digital health network, manage patients effectively, and expand your professional influence."
+    }
   }
 }

@@ -45,6 +45,16 @@ const KPIDashboardSection = ({ selectedFamily }) => {
             .catch((err) => {
                 console.error('Failed to load family dashboard', err);
                 if (!mounted) return;
+                
+                // Nếu là lỗi 404 (family không tồn tại), xóa selectedFamily khỏi localStorage
+                if (err?.response?.status === 404 || err?.message?.includes('404') || err?.message?.includes('not found')) {
+                    console.warn('Family not found, clearing selection from localStorage');
+                    localStorage.removeItem('selectedFamily');
+                    localStorage.removeItem('hasViewedPatients');
+                    // Reload để HorizontalLayout nhận state mới
+                    window.location.reload();
+                }
+                
                 setError(err?.message || 'Load failed');
             })
             .finally(() => mounted && setLoading(false));

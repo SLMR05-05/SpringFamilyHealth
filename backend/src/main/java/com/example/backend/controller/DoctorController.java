@@ -17,6 +17,8 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,7 +49,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<DoctorResponse> getById(@PathVariable Integer id) {
         return ApiResponse.<DoctorResponse>builder()
                 .result(toResponse(service.findById(id)))
@@ -60,7 +62,6 @@ public class DoctorController {
         Doctor entity = new Doctor();
         entity.setUser(userService.findById(req.getUserId()));
         entity.setCertificateNumber(req.getCertificateNumber());
-        entity.setDescription(req.getDescription());
         Doctor created = service.create(entity);
         return ApiResponse.<DoctorResponse>builder()
                 .result(toResponse(created))
@@ -68,12 +69,41 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<DoctorResponse> update(@PathVariable Integer id, @Valid @RequestBody DoctorUpdateRequest req) {
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    public ApiResponse<DoctorResponse> update(
+            @PathVariable Integer id, 
+            @Valid @RequestBody DoctorUpdateRequest req,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        // Get userId from JWT
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("UserId not found in token");
+        }
+        Integer currentUserId = ((Number) userIdClaim).intValue();
+        
+        // Get role from JWT
+        String role = jwt.getClaim("scope");
+        
+        // If not ADMIN, verify that the doctor is updating their own profile
+        if (role != null && !role.contains("ROLE_ADMIN")) {
+            // Get the doctor being updated
+            Doctor existingDoctor = service.findById(id);
+            if (!existingDoctor.getUser().getUserId().equals(currentUserId)) {
+                throw new RuntimeException("Access Denied: You can only update your own profile");
+            }
+        }
+        
         Doctor payload = new Doctor();
         payload.setUser(userService.findById(req.getUserId()));
         payload.setCertificateNumber(req.getCertificateNumber());
-        payload.setDescription(req.getDescription());
+        payload.setSpecialization(req.getSpecialization());
+        payload.setAddress(req.getAddress());
+        payload.setClinicName(req.getClinicName());
+        payload.setYearsOfExperience(req.getYearsOfExperience());
+        payload.setEducation(req.getEducation());
+        payload.setLanguagesSpoken(req.getLanguagesSpoken());
+        payload.setConsultationFee(req.getConsultationFee());
         return ApiResponse.<DoctorResponse>builder()
                 .result(toResponse(service.update(id, payload)))
                 .build();
@@ -122,7 +152,16 @@ public class DoctorController {
         DoctorResponse res = new DoctorResponse();
         res.setDoctorId(d.getDoctorId());
         res.setCertificateNumber(d.getCertificateNumber());
-        res.setDescription(d.getDescription());
+        res.setSpecialization(d.getSpecialization());
+        
+        // Include all doctor-specific information
+        res.setAddress(d.getAddress());
+        res.setClinicName(d.getClinicName());
+        res.setYearsOfExperience(d.getYearsOfExperience());
+        res.setEducation(d.getEducation());
+        res.setLanguagesSpoken(d.getLanguagesSpoken());
+        res.setConsultationFee(d.getConsultationFee());
+        res.setUpdatedAt(d.getUpdatedAt());
         
         // Include full user information
         if (d.getUser() != null) {

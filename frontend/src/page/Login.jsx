@@ -24,14 +24,15 @@ export default function Login() {
       
       if (success) {
         const userInfo = JSON.parse(localStorage.getItem('user'));
-        switch (userInfo.role) {
-          case "admin":
+        const userRole = userInfo.role?.toUpperCase(); // Normalize to uppercase
+        switch (userRole) {
+          case "ADMIN":
             navigate("/admin");
             break;
-          case "doctor":
+          case "DOCTOR":
             navigate("/doctor");
             break;
-          case "user":
+          case "USER":
             navigate("/user-dashboard");
             break;
           default:
@@ -116,7 +117,7 @@ export default function Login() {
           {error && (
             <p className="text-red-500 text-sm text-center">{error}</p>
           )}
-
+      
           {/* Login button */}
           <motion.button
             type="submit"

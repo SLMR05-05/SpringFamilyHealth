@@ -1,15 +1,20 @@
 /* eslint-disable no-unused-vars */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Copy, Check, RefreshCw, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export function AddMemberModal({ isOpen, onClose }) {
+export function AddMemberModal({ isOpen, onClose, inviteCode: initialInviteCode = null, loadingInvite = false }) {
   const { t } = useTranslation();
   
   // Giả lập mã mời lấy từ Database (Table invite_code)
-  const [inviteCode, setInviteCode] = useState('INVITE123A');
+  const [inviteCode, setInviteCode] = useState(initialInviteCode || '');
   const [copied, setCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // update when parent provides invite code
+  useEffect(() => {
+    if (initialInviteCode) setInviteCode(initialInviteCode);
+  }, [initialInviteCode]);
 
   if (!isOpen) return null;
 
@@ -48,11 +53,11 @@ export function AddMemberModal({ isOpen, onClose }) {
           </div>
 
           {/* Code Display Area */}
-          <div className="relative group">
+            <div className="relative group">
             <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-4 flex items-center justify-center gap-3 relative overflow-hidden">
-                <span className="text-3xl font-mono font-bold tracking-widest text-gray-800 select-all">
-                    {inviteCode}
-                </span>
+              <span className="text-3xl font-mono font-bold tracking-widest text-gray-800 select-all">
+                {loadingInvite ? 'Đang tải...' : (inviteCode || 'Chưa có mã mời')}
+              </span>
                 
                 {/* Copy Button (Icon) */}
                 <button 
@@ -71,6 +76,7 @@ export function AddMemberModal({ isOpen, onClose }) {
             <button 
                 onClick={handleCopy}
                 className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                disabled={loadingInvite || !inviteCode}
             >
                 {copied ? <Check className="w-5 h-5"/> : <Copy className="w-5 h-5"/>}
                 {copied ? t('AddMember.Copied') : t('AddMember.Copy')}

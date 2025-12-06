@@ -43,5 +43,14 @@ public class HealthRecordService {
     }
 
     @Transactional
+    public HealthRecord updateByMemberId(Integer memberId, HealthRecord payload) {
+        HealthRecord existing = findByMemberId(memberId);
+        existing.setBloodType(payload.getBloodType());
+        existing.setAllergies(payload.getAllergies());
+        existing.setChronicConditions(payload.getChronicConditions());
+        return repo.save(existing);
+    }
+
+    @Transactional
     public void delete(Integer id) { repo.delete(findById(id)); }
 }

@@ -52,6 +52,11 @@ const authApi = {
       token: token,
     });
   },
+
+  // Register - POST /auth/register
+  register(registrationData) {
+    return authClient.post("/auth/register", registrationData);
+  },
 };
 
 export default authApi;

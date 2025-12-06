@@ -8,6 +8,13 @@ const inviteCodeApi = {
     });
   },
 
+  // Get invite codes by familyId (returns array / paginated response)
+  getByFamilyId(familyId, page = 0, size = 10) {
+    return axiosClient.get("/invite-codes", {
+      params: { familyId, page, size },
+    });
+  },
+
   // Get invite code by ID
   getById(id) {
     return axiosClient.get(`/invite-codes/${id}`);

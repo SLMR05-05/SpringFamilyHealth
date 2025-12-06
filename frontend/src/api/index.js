@@ -15,3 +15,4 @@ export { default as visitHistoryApi } from "./visitHistoryApi";
 export { default as doctorApprovalApi } from "./doctorApprovalApi";
 export { default as appointmentApi } from "./appointmentApi";
 export { default as notificationApi } from "./notificationApi";
+export { default as doctorRequestApi } from "./doctorRequestApi";

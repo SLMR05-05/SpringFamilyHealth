@@ -90,6 +90,31 @@ public class HealthRecordController {
                 .build();
     }
 
+    @PutMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<HealthRecordResponse> updateForMe(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt,
+            @RequestBody @jakarta.validation.Valid HealthRecordCreateForMeRequest request) {
+        Object userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("UserId not found in token");
+        }
+        Integer userId = ((Number) userIdClaim).intValue();
+
+        // Find member for this user
+        com.example.backend.entity.Member member = memberService.findByUserId(userId);
+
+        HealthRecord payload = new HealthRecord();
+        payload.setBloodType(request.getBloodType());
+        payload.setAllergies(request.getAllergies());
+        payload.setChronicConditions(request.getChronicConditions());
+        
+        HealthRecord updated = service.updateByMemberId(member.getMemberId(), payload);
+        return ApiResponse.<HealthRecordResponse>builder()
+                .result(toResponse(updated))
+                .build();
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<HealthRecordResponse> update(@PathVariable Integer id, @RequestBody @jakarta.validation.Valid HealthRecordUpdateRequest request) {

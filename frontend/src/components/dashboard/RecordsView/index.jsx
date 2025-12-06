@@ -53,7 +53,7 @@ export default function RecordsView({ records, visitHistory, prescriptions, onRe
         >
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Lịch sử khám ({visitHistory?.length || 0})
+            Lịch sử khám ({visitHistory?.length})
           </div>
         </button>
         <button

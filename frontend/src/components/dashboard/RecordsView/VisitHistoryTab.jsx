@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, User } from 'lucide-react';
 import { message as antdMessage, Modal } from 'antd';
-import appointmentApi from '../../../api/appointmentApi';
+import visitHistoryApi from '../../../api/visitHistoryApi';
 import prescriptionApi from '../../../api/prescriptionApi';
 
 export default function VisitHistoryTab() {
@@ -19,28 +19,50 @@ export default function VisitHistoryTab() {
         
         // Get current logged-in user's member ID from localStorage or context
         const userStr = localStorage.getItem('user');
+        console.log('localStorage.user:', userStr);
+        
         if (!userStr) {
+          console.log('No user found in localStorage');
           setCompletedVisits([]);
           return;
         }
         
         const user = JSON.parse(userStr);
         const userId = user.userId || user.id;
+        console.log('Current userId:', userId);
         
-        // Fetch appointments by member ID (we use appointments as visit records)
-        let appointments = [];
+        // Fetch visit histories by member ID
+        let visitHistories = [];
         try {
-          const response = await appointmentApi.getByMemberId(userId);
-          appointments = response?.data || response?.result || response || [];
+          const response = await visitHistoryApi.getByMemberId(userId);
+          console.log('Raw API response from visit-histories:', response);
+          
+          // Handle paginated response structure
+          const rawData = response?.data || response?.result || response;
+          if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+            // Check for paginated structure (content, items, etc.)
+            visitHistories = rawData.content || rawData.items || rawData.data || [];
+          } else {
+            visitHistories = Array.isArray(rawData) ? rawData : [];
+          }
+          
+          console.log('Parsed visit histories:', visitHistories);
+          console.log('First visit object structure:', visitHistories[0]);
         } catch (error) {
-          appointments = [];
+          console.error('Error fetching visit histories:', error);
+          visitHistories = [];
         }
 
-        // Treat appointments as visit history; filter completed ones
-        const userCompletedVisits = Array.isArray(appointments)
-          ? appointments.filter(a => !a.status || a.status === 'COMPLETED')
+        // Filter: memberId matches userId (visit-history không có trường status)
+        const userCompletedVisits = Array.isArray(visitHistories)
+          ? visitHistories.filter(visit => {
+              const memberIdMatch = String(visit.memberId) === String(userId);
+              console.log(`Visit ${visit.visitId}: memberId=${visit.memberId} (match=${memberIdMatch})`);
+              return memberIdMatch;
+            })
           : [];
         
+        console.log('Filtered completed visits for current user:', userCompletedVisits);
         setCompletedVisits(userCompletedVisits);
       } catch (error) {
         console.error('Failed to fetch visit history:', error);
@@ -67,7 +89,7 @@ export default function VisitHistoryTab() {
     return (
       <div className="text-center py-12">
         <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500">Chưa có lịch sử khám bệnh</p>
+        <p className="text-gray-500">Chưa khám lần nào</p>
       </div>
     );
   }
@@ -75,13 +97,13 @@ export default function VisitHistoryTab() {
   return (
     <div className="space-y-4">
       {completedVisits.map((visit) => (
-        <div key={visit.appointmentId || visit.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div key={visit.visitId || visit.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
               <Calendar className="w-6 h-6 text-green-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Buổi khám ngày {visit.appointmentDate || visit.visitDate || 'Chưa cập nhật'}</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Buổi khám ngày {visit.visitDate || 'Chưa cập nhật'}</h3>
               <div className="space-y-2 text-sm">
                 {visit.doctorId && (
                   <div className="flex items-center gap-2 text-gray-600">
@@ -91,22 +113,23 @@ export default function VisitHistoryTab() {
                 )}
 
                 {visit.reason && (
-                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
-                    <p className="font-semibold text-gray-700 mb-1">Lý do/triệu chứng:</p>
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                    <p className="font-semibold text-gray-700 mb-1">Lý do khám:</p>
                     <p className="text-gray-600">{visit.reason}</p>
                   </div>
                 )}
 
-                {visit.notes && (
-                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                    <p className="font-semibold text-gray-700 mb-1">Ghi chú / Kết luận:</p>
-                    <p className="text-gray-600">{visit.notes}</p>
+                {visit.diagnosis && (
+                  <div className="mt-2 p-3 bg-yellow-50 rounded-lg">
+                    <p className="font-semibold text-gray-700 mb-1">Chẩn đoán:</p>
+                    <p className="text-gray-600">{visit.diagnosis}</p>
                   </div>
                 )}
 
-                {visit.status && (
-                  <div className="mt-2 inline-block px-3 py-1 text-sm font-medium rounded bg-green-50 text-green-700">
-                    Trạng thái: {visit.status}
+                {visit.treatment && (
+                  <div className="mt-2 p-3 bg-green-50 rounded-lg">
+                    <p className="font-semibold text-gray-700 mb-1">Điều trị:</p>
+                    <p className="text-gray-600">{visit.treatment}</p>
                   </div>
                 )}
               </div>
@@ -116,14 +139,14 @@ export default function VisitHistoryTab() {
             <button
               className="flex-1 bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition text-sm font-medium"
               onClick={async () => {
-                const apptId = visit.appointmentId || visit.id;
-                if (!apptId) {
+                const visitId = visit.visitId || visit.id;
+                if (!visitId) {
                   antdMessage.error('Không có ID buổi khám để hiển thị chi tiết');
                   return;
                 }
 
                 try {
-                  const resp = await appointmentApi.getById(apptId);
+                  const resp = await visitHistoryApi.getById(visitId);
                   const data = resp?.data || resp?.result || resp || null;
                   setSelectedVisitDetail(data);
                       setDetailVisible(true);
@@ -150,7 +173,7 @@ export default function VisitHistoryTab() {
                               const presResp = await prescriptionApi.getByMemberId(numId);
                               const allPres = presResp?.data || presResp?.result || presResp || [];
                               const related = Array.isArray(allPres)
-                                ? allPres.filter(p => (p.appointmentId || p.appointment || p.appointment_id) == apptId)
+                                ? allPres.filter(p => (p.visitId || p.visitHistoryId) == visitId)
                                 : [];
                               setSelectedPrescriptions(related);
                             }
@@ -183,26 +206,27 @@ export default function VisitHistoryTab() {
         {selectedVisitDetail ? (
           <div className="space-y-3 text-sm">
             <div>
-              <strong>Ngày:</strong> {selectedVisitDetail.appointmentDate || selectedVisitDetail.visitDate || 'Chưa cập nhật'}
+              <strong>Ngày khám:</strong> {selectedVisitDetail.visitDate || 'Chưa cập nhật'}
             </div>
             <div>
               <strong>Bác sĩ ID:</strong> {selectedVisitDetail.doctorId || 'N/A'}
             </div>
             {selectedVisitDetail.reason && (
               <div>
-                <strong>Lý do/triệu chứng:</strong>
+                <strong>Lý do khám:</strong>
                 <div className="text-gray-700">{selectedVisitDetail.reason}</div>
               </div>
             )}
-            {selectedVisitDetail.notes && (
+            {selectedVisitDetail.diagnosis && (
               <div>
-                <strong>Ghi chú / Kết luận:</strong>
-                <div className="text-gray-700">{selectedVisitDetail.notes}</div>
+                <strong>Chẩn đoán:</strong>
+                <div className="text-gray-700">{selectedVisitDetail.diagnosis}</div>
               </div>
             )}
-            {selectedVisitDetail.status && (
+            {selectedVisitDetail.treatment && (
               <div>
-                <strong>Trạng thái:</strong> {selectedVisitDetail.status}
+                <strong>Điều trị:</strong>
+                <div className="text-gray-700">{selectedVisitDetail.treatment}</div>
               </div>
             )}
             <div>

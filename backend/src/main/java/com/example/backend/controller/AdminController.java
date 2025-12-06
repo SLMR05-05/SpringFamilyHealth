@@ -68,6 +68,25 @@ public class AdminController {
         return ApiResponse.<Void>builder().build();
     }
 
+    @GetMapping("/dashboard/statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<java.util.Map<String, Object>> getDashboardStatistics() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        // Count users, doctors, appointments
+        long totalUsers = userService.countAll();
+        long totalDoctors = userService.countByRole("DOCTOR");
+        long totalPatients = userService.countByRole("USER");
+        
+        stats.put("totalUsers", totalUsers);
+        stats.put("totalDoctors", totalDoctors);
+        stats.put("totalPatients", totalPatients);
+        
+        return ApiResponse.<java.util.Map<String, Object>>builder()
+                .result(stats)
+                .build();
+    }
+
     private AdminResponse toResponse(Admin a) {
         AdminResponse res = new AdminResponse();
         res.setAdminId(a.getAdminId());

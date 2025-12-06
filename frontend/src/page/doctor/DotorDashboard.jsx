@@ -1,7 +1,7 @@
 import React from "react";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { motion } from "framer-motion";
-import DoctorLayout from "../../layout/DoctorLayout";
+import DoctorLayout from "../../layouts/DoctorLayout";
 import {
   Chart as ChartJS,
   CategoryScale,

@@ -1,4 +1,4 @@
-    import React, { useState } from 'react';
+    import React, { useState, useEffect } from 'react';
     import { Modal, Button, Typography, Space, Divider, Form, Input, Select, message } from 'antd';
     import { CloseOutlined, UserOutlined, MailOutlined, LockOutlined, SaveOutlined } from '@ant-design/icons';
 
@@ -28,6 +28,8 @@
                 const changes = {
                     name: values.name,
                     email: values.email,
+                    phone: values.phone,
+                    role: values.role,
                     status: values.status,
                     // Chỉ gửi mật khẩu nếu nó được điền
                     newPassword: values.newPassword || undefined, 
@@ -50,8 +52,22 @@
         const initialValues = {
             name: userData.name,
             email: userData.email,
+            phone: userData.phone,
+            role: userData.role,
             status: userData.status || 'Kích hoạt',
         };
+
+        // Ensure form fields update whenever the `user` prop or visibility changes.
+        useEffect(() => {
+            if (isVisible) {
+                // Reset then set values to ensure the form shows latest user data
+                form.resetFields();
+                form.setFieldsValue(initialValues);
+            } else {
+                // When modal is closed, reset the form to clear previous values
+                form.resetFields();
+            }
+        }, [user, isVisible]);
 
         return (
             <Modal
@@ -91,6 +107,27 @@
                         rules={[{ required: true, message: 'Vui lòng nhập email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}
                     >
                         <Input prefix={<MailOutlined className="text-gray-400" />} />
+                    </Form.Item>
+
+                    {/* Phone */}
+                    <Form.Item
+                        name="phone"
+                        label="Số điện thoại"
+                    >
+                        <Input placeholder="Nhập số điện thoại" />
+                    </Form.Item>
+
+                    {/* Role */}
+                    <Form.Item
+                        name="role"
+                        label="Vai trò"
+                        rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
+                    >
+                        <Select placeholder="Chọn vai trò">
+                            <Option value="ADMIN">Admin</Option>
+                            <Option value="DOCTOR">Doctor</Option>
+                            <Option value="USER">User</Option>
+                        </Select>
                     </Form.Item>
                     
                     {/* Trạng thái (Select) */}

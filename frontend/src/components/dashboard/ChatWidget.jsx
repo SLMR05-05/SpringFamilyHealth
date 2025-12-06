@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import axiosClient from '../../api/axiosClient';
 
 export default function ChatWidget({ onClose }) {
   const { t } = useTranslation();
@@ -24,14 +25,22 @@ export default function ChatWidget({ onClose }) {
     const newMessage = { id: Date.now(), text: inputText, sender: 'user' };
     setMessages(prev => [...prev, newMessage]);
     setInputText("");
-    setTimeout(() => {
-      const botResponse = {
-        id: Date.now() + 1,
-        text: t('Dashboard.Chat.Response'),
-        sender: 'bot'
-      };
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+    // add temporary typing indicator
+    const typingId = 'typing-' + Date.now();
+    setMessages(prev => [...prev, { id: typingId, text: '...', sender: 'bot', typing: true }]);
+
+    // call backend chat endpoint
+    (async () => {
+      try {
+        const resp = await axiosClient.post('/chat', { message: inputText });
+        const reply = resp?.data?.reply || '...';
+        // remove typing indicator and append reply
+        setMessages(prev => prev.filter(m => m.id !== typingId).concat([{ id: Date.now()+1, text: reply, sender: 'bot' }]));
+      } catch (err) {
+        console.error('Chat error', err);
+        setMessages(prev => prev.filter(m => m.id !== typingId).concat([{ id: Date.now()+2, text: 'Không thể kết nối tới dịch vụ chat.', sender: 'bot' }]));
+      }
+    })();
   };
 
   return (

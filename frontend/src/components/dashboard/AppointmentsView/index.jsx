@@ -6,6 +6,8 @@ import appointmentApi from '../../../api/appointmentApi';
 import prescriptionApi from '../../../api/prescriptionApi';
 import memberApi from '../../../api/memberApi';
 import doctorApi from '../../../api/doctorApi';
+import userApi from '../../../api/userApi';
+import familyApi from '../../../api/familyApi';
 
 export default function AppointmentsView({ appointments }) {
   const { t } = useTranslation();
@@ -21,6 +23,7 @@ export default function AppointmentsView({ appointments }) {
     time: '',
     notes: ''
   });
+  const [familyHasNoDoctor, setFamilyHasNoDoctor] = useState(false);
 
   useEffect(() => {
     // Keep only appointments that belong to the current logged-in user
@@ -49,6 +52,12 @@ export default function AppointmentsView({ appointments }) {
   }, [appointments]);
 
   const handleCreateAppointment = () => {
+    // Prevent creating appointment if family has no assigned doctor
+    if (familyHasNoDoctor) {
+      antdMessage.warning('Gia đình bạn chưa có bác sĩ quản lý. Vui lòng chọn bác sĩ ở tab Bác sĩ.');
+      return;
+    }
+
     setModalType('create');
     setSelectedAppointment(null);
     setFormData({ title: '', date: '', time: '', notes: '' });
@@ -201,6 +210,24 @@ export default function AppointmentsView({ appointments }) {
   useEffect(() => {
     fetchMemberAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Check whether current user's family has an assigned doctor
+  useEffect(() => {
+    (async () => {
+      try {
+        const resp = await userApi.getMyFamily();
+        const fam = resp?.data || resp || null;
+        // Check for doctorId directly on the family object (not nested)
+        const hasDoctor = fam && (fam.doctorId != null || (fam.doctor != null && (fam.doctor.doctorId || fam.doctor.id)));
+        console.log('Family doctor check:', { fam, hasDoctor, doctorId: fam?.doctorId });
+        setFamilyHasNoDoctor(!hasDoctor);
+      } catch (err) {
+        console.warn('Could not fetch family info', err);
+        // default to not blocking (or you can block if preferred)
+        setFamilyHasNoDoctor(true);
+      }
+    })();
   }, []);
 
   const handleViewDetails = (apt) => {
@@ -440,6 +467,15 @@ export default function AppointmentsView({ appointments }) {
         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <p className="text-gray-500 text-lg">Chưa có lịch khám nào</p>
         <p className="text-gray-400 text-sm mt-2">Các cuộc hẹn khám bệnh sắp tới sẽ hiển thị tại đây</p>
+        {familyHasNoDoctor && (
+          <div className="mt-6 inline-flex items-start gap-3 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg text-sm">
+            <AlertCircle className="w-5 h-5 text-yellow-700 mt-0.5" />
+            <div>
+              <div className="font-medium">Gia đình bạn chưa có bác sĩ quản lý</div>
+              <div className="text-sm text-yellow-700">Không thể đặt lịch khám. Vui lòng chọn bác sĩ ở tab Bác sĩ.</div>
+            </div>
+          </div>
+        )}
         <button 
           onClick={handleCreateAppointment}
           className="mt-6 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium flex items-center gap-2 mx-auto"
@@ -504,6 +540,17 @@ export default function AppointmentsView({ appointments }) {
     <>
       {(!localAppointments || localAppointments.length === 0) ? renderEmptyState() : (
         <div className='bg-white py-4 px-5 rounded-xl border border-gray-200'>
+          {familyHasNoDoctor && (
+            <div className="mb-4">
+              <div className="inline-flex items-start gap-3 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg text-sm w-full">
+                <AlertCircle className="w-5 h-5 text-yellow-700 mt-0.5" />
+                <div>
+                  <div className="font-medium">Gia đình bạn chưa có bác sĩ quản lý</div>
+                  <div className="text-sm text-yellow-700">Không thể đặt lịch khám. Vui lòng chọn bác sĩ ở tab Bác sĩ.</div>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{t('Dashboard.Appointments.Title')}</h2>

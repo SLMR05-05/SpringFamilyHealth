@@ -1,6 +1,6 @@
 import { Modal, Form, Input, Select, Button, Space, } from "antd";
 import React, { useEffect } from "react";
-import { LockOutlined, MailOutlined, UserOutlined, IdcardOutlined } from "@ant-design/icons";
+import { LockOutlined, MailOutlined, UserOutlined, IdcardOutlined, PhoneOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import { useForm } from "antd/es/form/Form";
 
@@ -92,6 +92,19 @@ const AddDoctorModal = ({ open, onCancel, onFinish }) => {
           ]}
         >
           <Input prefix={<MailOutlined />} placeholder="Ví dụ: tenbacsi@clinic.com" />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          label="Số điện thoại"
+          rules={[
+            {
+              pattern: /^[0-9]{10,11}$/,
+              message: "Số điện thoại phải có 10-11 chữ số!",
+            },
+          ]}
+        >
+          <Input prefix={<PhoneOutlined />} placeholder="Ví dụ: 0912345678" />
         </Form.Item>
 
         <Form.Item

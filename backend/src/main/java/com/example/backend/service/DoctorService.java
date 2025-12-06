@@ -32,7 +32,30 @@ public class DoctorService {
         Doctor existing = findById(id);
         existing.setUser(payload.getUser());
         existing.setCertificateNumber(payload.getCertificateNumber());
-        existing.setDescription(payload.getDescription());
+        
+        // Update additional fields
+        if (payload.getSpecialization() != null) {
+            existing.setSpecialization(payload.getSpecialization());
+        }
+        if (payload.getAddress() != null) {
+            existing.setAddress(payload.getAddress());
+        }
+        if (payload.getClinicName() != null) {
+            existing.setClinicName(payload.getClinicName());
+        }
+        if (payload.getYearsOfExperience() != null) {
+            existing.setYearsOfExperience(payload.getYearsOfExperience());
+        }
+        if (payload.getEducation() != null) {
+            existing.setEducation(payload.getEducation());
+        }
+        if (payload.getLanguagesSpoken() != null) {
+            existing.setLanguagesSpoken(payload.getLanguagesSpoken());
+        }
+        if (payload.getConsultationFee() != null) {
+            existing.setConsultationFee(payload.getConsultationFee());
+        }
+        
         return repo.save(existing);
     }
 

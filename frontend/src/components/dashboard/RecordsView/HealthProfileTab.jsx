@@ -137,42 +137,23 @@ export default function HealthProfileTab() {
       }
       
       // Update health record data (blood type, allergies, chronic conditions)
+      // Backend requires bloodType to be non-empty, use default if empty
+      const bloodType = editMetrics.bloodType?.trim() || 'Chưa xác định';
+      const allergies = editMetrics.allergies?.trim() || '';
+      const chronicConditions = editMetrics.chronicConditions?.trim() || '';
+      
       const healthRecordData = {
-        memberId: userId,
-        bloodType: editMetrics.bloodType,
-        allergies: editMetrics.allergies,
-        chronicConditions: editMetrics.chronicConditions
+        bloodType: bloodType,
+        allergies: allergies,
+        chronicConditions: chronicConditions
       };
       
-      // Try to update existing record, or create new one if needed
+      // Always use updateForMe endpoint - it will update existing record based on logged-in user's member
       try {
-        // First try to get existing health record
-        const existingRecord = await healthRecordApi.getByMemberId(userId);
-        const recordId = existingRecord?.data?.healthRecordId || existingRecord?.result?.healthRecordId || existingRecord?.healthRecordId;
-        
-        if (recordId) {
-          await healthRecordApi.update(recordId, healthRecordData);
-        } else {
-          // create for authenticated user's member (no memberId in payload expected by backend /me endpoint)
-          await healthRecordApi.createForMe({
-            bloodType: editMetrics.bloodType,
-            allergies: editMetrics.allergies,
-            chronicConditions: editMetrics.chronicConditions
-          });
-        }
+        await healthRecordApi.updateForMe(healthRecordData);
       } catch (error) {
         console.error('Failed to update health record:', error);
-        // Try to create new record if update fails
-        try {
-          await healthRecordApi.createForMe({
-            bloodType: editMetrics.bloodType,
-            allergies: editMetrics.allergies,
-            chronicConditions: editMetrics.chronicConditions
-          });
-        } catch (createError) {
-          console.error('Failed to create health record:', createError);
-          throw new Error('Không thể cập nhật hồ sơ sức khỏe');
-        }
+        throw new Error('Không thể cập nhật hồ sơ sức khỏe');
       }
       
       setHealthMetrics({ ...editMetrics });

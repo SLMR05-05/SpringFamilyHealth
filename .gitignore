@@ -45,3 +45,6 @@ build/
 # Misc
 *.orig
 .cache/
+
+.env
+backend/.env

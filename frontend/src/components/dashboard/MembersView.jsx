@@ -2,13 +2,58 @@ import { useState } from 'react';
 import { Plus, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AddMemberModal } from '../modalUser/AddMemberModal';
+import inviteCodeApi from '../../api/inviteCodeApi';
 
-export default function MembersView({ members }) {
+export default function MembersView({ members, familyId }) {
   const { t } = useTranslation();
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [inviteCode, setInviteCode] = useState(null);
+  const [loadingInvite, setLoadingInvite] = useState(false);
 
-  const handleOpenAddMemberModal = () => {
-    setShowAddMemberModal(true);
+  const handleOpenAddMemberModal = async () => {
+    // fetch family's invite code and open modal
+    try {
+      setLoadingInvite(true);
+      if (familyId) {
+        // try API endpoint that supports filtering by familyId
+        let found = null;
+        try {
+          const resp = await inviteCodeApi.getByFamilyId(familyId, 0, 50);
+          const data = resp?.data || resp || {};
+          const list = Array.isArray(data) ? data : (data.content || data.result || []);
+          if (Array.isArray(list) && list.length > 0) {
+            // prefer item whose family matches
+            found = list.find(i => (i.familyId && String(i.familyId) === String(familyId)) || (i.family && (i.family.id === familyId || String(i.family.id) === String(familyId))));
+            if (!found) found = list[0];
+          }
+        } catch (e) {
+          console.warn('getByFamilyId failed, will fallback to getAll', e);
+        }
+
+        // fallback: fetch all invite codes and filter by familyId
+        if (!found) {
+          try {
+            const allResp = await inviteCodeApi.getAll(0, 200);
+            const allData = allResp?.data || allResp || {};
+            const allList = Array.isArray(allData) ? allData : (allData.content || allData.result || []);
+            found = allList.find(i => (i.familyId && String(i.familyId) === String(familyId)) || (i.family && (i.family.id === familyId || String(i.family.id) === String(familyId))));
+          } catch (e) {
+            console.warn('getAll fallback failed', e);
+          }
+        }
+
+        const code = found?.code || found?.inviteCode || found?.invite_code || null;
+        setInviteCode(code);
+      } else {
+        setInviteCode(null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch invite code', err);
+      setInviteCode(null);
+    } finally {
+      setLoadingInvite(false);
+      setShowAddMemberModal(true);
+    }
   };
 
   const handleCloseAddMemberModal = () => {
@@ -38,8 +83,10 @@ export default function MembersView({ members }) {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center"><User className="w-8 h-8 text-blue-600" /></div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
-                  <p className="text-sm text-gray-500">{member.age} tuổi • {member.gender}</p>
-                  <p className="text-sm text-blue-600 font-medium">{member.relationship || member.role}</p>
+                  <p className="text-sm text-gray-500">{member.gender}</p>
+                  <p className="text-sm text-blue-600 font-medium">
+                    {member.role === 'HEAD' ? 'Chủ hộ' : member.relationship}
+                  </p>
                 </div>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.status === 'Healthy' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -114,7 +161,9 @@ export default function MembersView({ members }) {
 
     <AddMemberModal 
       isOpen={showAddMemberModal} 
-      onClose={handleCloseAddMemberModal} 
+      onClose={handleCloseAddMemberModal}
+      inviteCode={inviteCode}
+      loadingInvite={loadingInvite}
     />
     </>
   );

@@ -1,19 +1,21 @@
-// ReponsiveSider.jsx (Đã sửa)
+// ReponsiveSider.jsx - Menu chính và menu phụ
 
 import React from "react";
 import MenuCustom from "./Menu";
+import SubMenu from "./SubMenu";
 
-const ReponsiveSider = () => {
+const ReponsiveSider = ({ hasViewedPatients }) => {
   return (
-    // Giữ lại một wrapper chính với các class responsive và căn giữa
-    <div
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      {/* Menu chính - luôn hiển thị */}
+      <MenuCustom />
       
-    >
-      {/* Loại bỏ wrapper lồng nhau ở đây: */}
-      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full"> */}
-        <MenuCustom />
-      {/* </div> */}
+      {/* Menu phụ - chỉ hiển thị khi đã nhấn "Xem bệnh nhân" */}
+      {hasViewedPatients && (
+        <div className="mt-3">
+          <SubMenu />
+        </div>
+      )}
     </div>
   );
 };

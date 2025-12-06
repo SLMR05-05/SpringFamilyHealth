@@ -5,6 +5,7 @@ import com.example.backend.dto.response.UserResponse;
 import com.example.backend.dto.user.UserCreateRequest;
 import com.example.backend.dto.user.UserUpdateRequest;
 import com.example.backend.dto.user.PasswordChangeRequest;
+import com.example.backend.entity.Family;
 import com.example.backend.entity.Member;
 import com.example.backend.entity.User;
 import com.example.backend.repository.MemberRepository;
@@ -85,7 +86,7 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','DOCTOR')")
     public ApiResponse<UserResponse> updateMyProfile(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody Map<String, Object> updates) {
@@ -143,11 +144,15 @@ public class UserController {
             result.put("familyId", null);
             result.put("memberId", null);
             result.put("roleInFamily", null);
+            result.put("doctorId", null);
             result.put("message", "User is not a member of any family. Please create or join a family first.");
         } else {
-            result.put("familyId", member.getFamily().getFamilyId());
+            Family family = member.getFamily();
+            result.put("familyId", family.getFamilyId());
             result.put("memberId", member.getMemberId());
             result.put("roleInFamily", member.getRoleInFamily());
+            // Add doctorId from family to check if family has an assigned doctor
+            result.put("doctorId", family.getDoctor() != null ? family.getDoctor().getDoctorId() : null);
         }
         
         return ApiResponse.<Map<String, Object>>builder()

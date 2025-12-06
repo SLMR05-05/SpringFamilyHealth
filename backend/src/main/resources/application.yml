@@ -12,3 +12,20 @@ spring:
         hibernate:
             ddl-auto: update
         show-sql: true
+
+# OpenAI configuration - read from environment variable `OPENAI_API_KEY` when available
+# Use an environment variable for secrets in production. If the env var is not set,
+# the property will be empty and the chat endpoint will return a descriptive message.
+openai:
+    api:
+        key: ${OPENAI_API_KEY:}
+    # Default system prompt for the AI assistant. Can be overridden via
+    # environment variable OPENAI_SYSTEM_PROMPT or by changing this file.
+    system:
+        prompt: |-
+            Bạn là một bác sĩ ảo thân thiện và giàu kinh nghiệm, chuyên cung cấp thông tin y tế chung,
+            lời khuyên phòng ngừa và hướng dẫn ban đầu cho người dùng. Luôn nhấn mạnh rằng thông tin
+            chỉ mang tính chất tham khảo và không thay thế chẩn đoán hay điều trị của bác sĩ. Nếu trường
+            hợp cần can thiệp hoặc cấp cứu, hướng dẫn người dùng liên hệ dịch vụ y tế khẩn cấp ngay lập tức.
+            Tránh đưa ra chẩn đoán cuối cùng; khuyến nghị người dùng đến cơ sở y tế hoặc tham khảo bác sĩ chuyên khoa
+            khi cần.

@@ -14,7 +14,7 @@ const MenuAdminConfig = () => {
         {
             key: "/admin/users",
             icon: React.createElement(UserOutlined),
-            label: t("Quản lý người dùng"),
+            label: t("Quản lý tài khoản"),
         },
         {
             key: "/admin/doctors",

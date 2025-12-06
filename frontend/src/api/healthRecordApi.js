@@ -28,6 +28,11 @@ const healthRecordApi = {
     return axiosClient.post("/health-records/me", data);
   },
 
+  // Update health record for authenticated user's member
+  updateForMe(data) {
+    return axiosClient.put("/health-records/me", data);
+  },
+
   // Update health record
   update(id, data) {
     return axiosClient.put(`/health-records/${id}`, data);

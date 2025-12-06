@@ -1,31 +1,72 @@
 services:
-  familyhealth-all-in-one:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: familyhealth-app
+  # MySQL Database
+  mysql:
+    image: mysql:8.4
+    container_name: familyhealth-mysql
+    restart: unless-stopped
     ports:
-      - "3306:3306"  # MySQL
-      - "8080:8080"  # Backend
-      - "5173:5173"  # Frontend
+      - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=FamilyHealth
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/FamilyHealth?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - JWT_SIGNER_KEY=${JWT_SIGNER_KEY:-ANCf_8p1AE4ZQs7QuqGAyyfTEgYrKSjKWkhBk5cIn1_2QVr2jEjmM-1tu7EgnyOf_fAsvdFXva8Sv05iTGzETg}
-      - JWT_VALID_DURATION=3600
-      - JWT_REFRESHABLE_DURATION=36000
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: springfamilyhealth
+      MYSQL_USER: familyhealth
+      MYSQL_PASSWORD: familyhealth123
     volumes:
-      - db-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
+      - ./database/structure.sql:/docker-entrypoint-initdb.d/1-structure.sql
+      - ./database/test_data.sql:/docker-entrypoint-initdb.d/2-test_data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - familyhealth-network
+
+  # Spring Boot Backend with PowerShell
+  backend:
+    image: springfamilyhealth-backend-pwsh:latest
+    container_name: familyhealth-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/springfamilyhealth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      mysql:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
-      timeout: 3s
+      timeout: 10s
       retries: 3
-      start_period: 90s
+      start_period: 60s
+    networks:
+      - familyhealth-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: familyhealth-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - familyhealth-network
 
 volumes:
-  db-data:
+  mysql-data:
+
+networks:
+  familyhealth-network:
+    driver: bridge
